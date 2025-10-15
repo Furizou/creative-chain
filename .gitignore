@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local guide docs to help with development, not for production
+/guide-docs
+
+# local docs
+*.md
+!README.md
