@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
+/* CreativeChain Custom Colors */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-base: #F8F8F8;
+  --color-primary: #FFCC00;
+  --color-secondary: #FF6600;
+  --color-structural: #333333;
+  --color-warning: #CC3333;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Define custom utility classes */
+.bg-base { background-color: var(--color-base); }
+.bg-primary { background-color: var(--color-primary); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-structural { background-color: var(--color-structural); }
+.bg-warning { background-color: var(--color-warning); }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+.text-base { color: var(--color-base); }
+.text-primary { color: var(--color-primary); }
+.text-secondary { color: var(--color-secondary); }
+.text-structural { color: var(--color-structural); }
+.text-warning { color: var(--color-warning); }
 
+.border-base { border-color: var(--color-base); }
+.border-primary { border-color: var(--color-primary); }
+.border-secondary { border-color: var(--color-secondary); }
+.border-structural { border-color: var(--color-structural); }
+.border-warning { border-color: var(--color-warning); }
+
+/* CreativeChain Global Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
+}
+
+/* Typography Settings */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-outfit), sans-serif;
+}
+
+h1 {
+  font-weight: 900; /* Black weight for H1 */
+}
+
+h2, h3 {
+  font-weight: 700; /* Bold weight for H2 and H3 */
 }
