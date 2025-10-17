@@ -47,3 +47,6 @@ next-env.d.ts
 # local docs
 *.md
 !README.md
+
+# Local config files
+.kilocode/
