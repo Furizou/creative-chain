@@ -9,9 +9,12 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test src/tests/*.test.js",
-    "test:blockchain": "node --test src/tests/blockchain.test.js"
+    "test:blockchain": "node --test src/tests/blockchain.test.js",
+    "test:wallet": "node --test src/tests/wallet-manager.test.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.47.18",
+    "ethers": "^5.7.2",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
