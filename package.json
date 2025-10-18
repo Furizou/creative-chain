@@ -4,24 +4,30 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node --test src/tests/*.test.js",
-    "test:blockchain": "node --test src/tests/blockchain.test.js"
+    "test:blockchain": "node --test src/tests/blockchain.test.js",
+    "test:wallet": "node --test src/tests/wallet-manager.test.js",
+    "test:blockchain-api": "node --test src/tests/blockchain-api.test.js"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.75.0",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.47.18",
+    "ethers": "^5.7.2",
+    "lucide-react": "^0.546.0",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "recharts": "^3.3.0",
     "thirdweb": "^5.108.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4"
