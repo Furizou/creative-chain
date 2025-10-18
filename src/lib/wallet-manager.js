@@ -12,32 +12,40 @@ import { ethers } from 'ethers';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-// Environment validation
+// Environment validation with development fallbacks
+const WALLET_ENCRYPTION_KEY = process.env.WALLET_ENCRYPTION_KEY || 'dev_key_32_chars_for_testing_only!';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Warning for development
 if (!process.env.WALLET_ENCRYPTION_KEY) {
-  throw new Error('WALLET_ENCRYPTION_KEY environment variable is required');
+  console.warn('⚠️  WALLET_ENCRYPTION_KEY not set - using development key. DO NOT USE IN PRODUCTION!');
 }
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Supabase environment variables are required');
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.warn('⚠️  Supabase environment variables not configured. Wallet features will be disabled.');
 }
 
 // Initialize Supabase client with service role key for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+let supabaseAdmin = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+  supabaseAdmin = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
-  }
-);
+  );
+}
 
 // Encryption configuration
 const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
 // Ensure key is exactly 32 bytes for AES-256
 const ENCRYPTION_KEY = (() => {
-  const key = Buffer.from(process.env.WALLET_ENCRYPTION_KEY, 'utf-8');
+  const key = Buffer.from(WALLET_ENCRYPTION_KEY, 'utf-8');
   if (key.length < 32) {
     // Pad with zeros if too short
     const paddedKey = Buffer.alloc(32);
@@ -116,6 +124,18 @@ export function decryptPrivateKey(encryptedKey) {
  */
 export async function createCustodialWallet(userId, blockchain = 'polygon-amoy') {
   try {
+    // Check if Supabase is configured
+    if (!supabaseAdmin) {
+      console.warn('⚠️  Supabase not configured - creating mock wallet for development');
+      // Return a mock wallet for development
+      const wallet = ethers.Wallet.createRandom();
+      return {
+        address: wallet.address,
+        wallet: wallet,
+        mock: true // Flag to indicate this is a mock wallet
+      };
+    }
+
     // Validate userId
     if (!userId || typeof userId !== 'string') {
       throw new Error('Valid userId is required');
