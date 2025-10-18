@@ -1,24 +1,45 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET(req) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const cookieStore = cookies();
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
   
   try {
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+    // Get authenticated user from session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error('Auth error:', sessionError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }), 
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
+    const user = session.user;
     if (!user) {
-      return NextResponse.json(
-        { error: 'No user found' },
-        { status: 401 }
+      return new Response(
+        JSON.stringify({ error: 'No user found' }), 
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -30,22 +51,35 @@ export async function GET(req) {
       .single();
     
     if (profileError) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
+      console.error('Profile error:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Profile not found' }), 
+        { 
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
-    // Get total works
+    // Get total works and calculate stats
     const { data: works, error: worksError } = await supabase
       .from('creative_works')
-      .select('id')
-      .eq('creator_id', profile.id);
+      .select(`
+        id,
+        license_transactions(
+          amount
+        )
+      `)
+      .eq('creator_id', user.id);
     
     if (worksError) {
-      return NextResponse.json(
-        { error: 'Error fetching works' },
-        { status: 500 }
+      console.error('Error fetching works:', worksError);
+      return new Response(
+        JSON.stringify({ error: 'Error fetching works' }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
