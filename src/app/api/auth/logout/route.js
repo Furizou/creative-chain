@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 export async function POST(request) {
   try {
     // Create Supabase client for route handler
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
     // Sign out the user
     const { error } = await supabase.auth.signOut();
@@ -34,7 +35,8 @@ export async function POST(request) {
 // Also support GET method for logout links
 export async function GET(request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     
     const { error } = await supabase.auth.signOut();
 

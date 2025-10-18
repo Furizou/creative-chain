@@ -32,7 +32,8 @@ export async function POST(request) {
     console.log(`✅ [${requestId}] Required fields present`);
 
     // Create Supabase client for route handler
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     console.log(`✅ [${requestId}] Supabase client created`);
 
     // Attempt to sign in

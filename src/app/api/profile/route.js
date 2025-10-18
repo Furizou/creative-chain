@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 // GET - Fetch user profile
 export async function GET(request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -87,7 +88,8 @@ export async function GET(request) {
 // PUT - Update user profile
 export async function PUT(request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
