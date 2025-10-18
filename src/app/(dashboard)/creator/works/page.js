@@ -4,7 +4,7 @@ import MarketplaceCard from '@/components/MarketplaceCard';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
-export default function DashboardMarketplace(){
+export default function CreatorWorks(){
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +20,7 @@ export default function DashboardMarketplace(){
 
   return (
     <div className="p-8">
-      <PageHeader title="Marketplace (Dashboard)" />
+      <PageHeader title="My Works" />
       {loading? <p>Loading...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {works.map(w=> <MarketplaceCard key={w.id} work={w} />)}
@@ -29,4 +29,3 @@ export default function DashboardMarketplace(){
     </div>
   );
 }
- 
