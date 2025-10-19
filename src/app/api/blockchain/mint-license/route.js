@@ -45,7 +45,7 @@ export async function POST(request) {
       terms,
       expiryDate,
       usageLimit,
-      priceUsdt,        // Maps to price_usdt (required in existing schema)
+      priceBidr,        // Maps to price_bidr (required in existing schema)
       transactionHash   // Payment transaction hash (required in existing schema)
     } = body;
 
@@ -54,12 +54,12 @@ export async function POST(request) {
     // ==========================================
 
     // Check required fields
-    if (!buyerUserId || !workId || !licenseOfferingId || !orderId || !licenseType || !workTitle || !creatorName || !terms || !priceUsdt || !transactionHash) {
+    if (!buyerUserId || !workId || !licenseOfferingId || !orderId || !licenseType || !workTitle || !creatorName || !terms || !priceBidr || !transactionHash) {
       return NextResponse.json(
         {
           success: false,
           error: 'MISSING_FIELDS',
-          message: 'Required fields: buyerUserId, workId, licenseOfferingId, orderId, licenseType, workTitle, creatorName, terms, priceUsdt, transactionHash'
+          message: 'Required fields: buyerUserId, workId, licenseOfferingId, orderId, licenseType, workTitle, creatorName, terms, priceBidr, transactionHash'
         },
         { status: 400 }
       );
@@ -225,7 +225,7 @@ export async function POST(request) {
       terms,
       expiryDate: expiryDate || null,
       usageLimit: usageLimit !== null && usageLimit !== undefined ? usageLimit : null,
-      purchaseAmount: priceUsdt,
+      purchaseAmount: priceBidr,
       orderId,
       licenseId: null // Will be set after database insert
     });
@@ -277,7 +277,7 @@ export async function POST(request) {
       licenseType,
       expiryDate: expiryDate || null,
       usageLimit: usageLimit !== null && usageLimit !== undefined ? usageLimit : null,
-      priceUsdt,
+      priceBidr,
       transactionHash,
       walletAddress,
       nftContractAddress
@@ -389,12 +389,36 @@ export async function GET(request) {
       .from('licenses')
       .select('*');
 
-    if (licenseId) {
-      query = query.eq('id', licenseId);
-    } else if (orderId) {
-      query = query.eq('order_id', orderId);
-    } else if (tokenId) {
-      query = query.eq('nft_token_id', tokenId);
+    // Handle queries that can return multiple results
+    if (orderId) {
+      const { data, error } = await query.eq('order_id', orderId);
+
+      if (error) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'QUERY_ERROR',
+            message: error.message
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!data || data.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'NOT_FOUND',
+            message: 'No licenses found for this order'
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        licenses: data
+      });
     } else if (buyerUserId) {
       // Return all licenses for this buyer
       const { data, error } = await query.eq('buyer_id', buyerUserId);
@@ -414,6 +438,13 @@ export async function GET(request) {
         success: true,
         licenses: data || []
       });
+    }
+
+    // Handle queries that return a single result (licenseId or tokenId)
+    if (licenseId) {
+      query = query.eq('id', licenseId);
+    } else if (tokenId) {
+      query = query.eq('nft_token_id', tokenId);
     }
 
     const { data, error } = await query.single();
