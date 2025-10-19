@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function PaymentDemoPage() {
   const router = useRouter();
-  const [workId, setWorkId] = useState('008b8b96-ce81-494d-9c34-dec770ac9abc');
-  const [priceUsdt, setPriceUsdt] = useState(25.50);
+  const [licenseOfferingId, setLicenseOfferingId] = useState('008b8b96-ce81-494d-9c34-dec770ac9abc');
   const [isLoading, setIsLoading] = useState(false);
   const [apiResponse, setApiResponse] = useState(null);
 
@@ -21,8 +20,7 @@ export default function PaymentDemoPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          work_id: workId,
-          price_usdt: priceUsdt,
+          license_offering_id: licenseOfferingId,
         }),
       });
 
@@ -56,47 +54,31 @@ export default function PaymentDemoPage() {
           </h1>
 
           <div className="space-y-6">
-            {/* Work ID Input */}
+            {/* License Offering ID Input */}
             <div>
               <label
-                htmlFor="work-id"
+                htmlFor="license-offering-id"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Work ID
+                License Offering ID
               </label>
               <input
-                id="work-id"
+                id="license-offering-id"
                 type="text"
-                value={workId}
-                onChange={(e) => setWorkId(e.target.value)}
+                value={licenseOfferingId}
+                onChange={(e) => setLicenseOfferingId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter valid work ID from database"
+                placeholder="Enter valid license offering ID from database"
               />
-            </div>
-
-            {/* Price USDT Input */}
-            <div>
-              <label
-                htmlFor="price"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Price (USDT)
-              </label>
-              <input
-                id="price"
-                type="number"
-                step="0.01"
-                value={priceUsdt}
-                onChange={(e) => setPriceUsdt(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter price in USDT"
-              />
+              <p className="mt-1 text-sm text-gray-500">
+                The system will automatically fetch pricing from the license offering
+              </p>
             </div>
 
             {/* Start Test Payment Button */}
             <button
               onClick={handleStartPayment}
-              disabled={isLoading || !workId || !priceUsdt}
+              disabled={isLoading || !licenseOfferingId}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200"
             >
               {isLoading ? 'Processing...' : 'Start Test Payment'}
@@ -145,11 +127,11 @@ export default function PaymentDemoPage() {
               Demo Instructions:
             </h4>
             <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-              <li>Enter a work ID and price in USDT</li>
-              <li>Click "Start Test Payment" to create a payment session</li>
+              <li>Enter a valid license offering ID from the database</li>
+              <li>Click "Start Test Payment" to create an order and payment session</li>
               <li>You'll be automatically redirected to the mock payment page</li>
-              <li>Confirm the mock payment to complete the flow and create a license</li>
-              <li>View the success page with license confirmation</li>
+              <li>Confirm the mock payment to complete the flow and update order status</li>
+              <li>View the success page with order confirmation</li>
             </ol>
           </div>
         </div>
