@@ -1,14 +1,14 @@
 /**
  * @fileoverview Payment Initiation API Route
  * Handles POST requests to create new payment sessions for license purchases
+ * Now integrates with the order system
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createPaymentSession } from '@/lib/payment-gateway.js';
 
 /**
  * POST /api/payments/initiate
- * Creates a new payment session for a license offering
+ * Creates a new payment session by first creating an order
  * 
  * @param {NextRequest} request - The incoming request
  * @returns {NextResponse} JSON response with payment session details
@@ -17,38 +17,70 @@ export async function POST(request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { work_id, price_usdt } = body;
+    const { license_offering_id } = body;
 
     // Validate required fields
-    if (!work_id) {
+    if (!license_offering_id) {
       return NextResponse.json(
         { 
-          error: 'Missing required field: work_id',
+          error: 'Missing required field: license_offering_id',
           success: false 
         },
         { status: 400 }
       );
     }
 
-    if (!price_usdt || typeof price_usdt !== 'number' || price_usdt <= 0) {
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(license_offering_id)) {
       return NextResponse.json(
-        { 
-          error: 'Invalid price_usdt: must be a positive number',
-          success: false 
+        {
+          error: 'Invalid license_offering_id format. Must be a valid UUID.',
+          success: false
         },
         { status: 400 }
       );
     }
 
-    // Create payment session using our payment gateway library
-    const paymentSession = await createPaymentSession(work_id, price_usdt);
+    // Call our order creation endpoint to generate a pending order
+    const orderResponse = await fetch(new URL('/api/orders/create', request.url), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Forward any authorization headers
+        ...(request.headers.get('authorization') && {
+          'authorization': request.headers.get('authorization')
+        })
+      },
+      body: JSON.stringify({ license_offering_id })
+    });
+
+    const orderResult = await orderResponse.json();
+
+    if (!orderResponse.ok) {
+      console.error('Order creation failed:', orderResult);
+      return NextResponse.json(
+        {
+          error: orderResult.error || 'Failed to create order',
+          success: false
+        },
+        { status: orderResponse.status }
+      );
+    }
+
+    const orderId = orderResult.id;
+
+    // Generate mock payment URL with the order ID
+    const paymentUrl = `/payment-demo/process/${orderId}`;
+
+    console.log(`Payment session initiated for order ${orderId}`);
 
     // Return successful response
     return NextResponse.json(
       {
         success: true,
-        orderId: paymentSession.orderId,
-        paymentUrl: paymentSession.paymentUrl,
+        orderId: orderId,
+        paymentUrl: paymentUrl,
         message: 'Payment session created successfully'
       },
       { status: 201 }
