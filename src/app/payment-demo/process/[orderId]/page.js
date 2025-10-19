@@ -1,13 +1,64 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+
+/**
+ * Format price to Indonesian Rupiah currency
+ * @param {number|string} amount - Amount to format
+ * @returns {string} Formatted IDR currency string
+ */
+const formatIDR = (amount) => {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numAmount)) return 'N/A';
+  
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(numAmount);
+};
 
 export default function PaymentProcessPage({ params }) {
   const router = useRouter();
   const { orderId } = use(params);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [orderData, setOrderData] = useState(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState(null);
+
+  // Fetch order details from API
+  useEffect(() => {
+    const fetchOrderData = async () => {
+      try {
+        setIsLoadingData(true);
+        setDataError(null);
+
+        const response = await fetch(`/api/orders/${orderId}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch order details');
+        }
+
+        if (result.success) {
+          setOrderData(result.data);
+        } else {
+          throw new Error(result.error || 'Failed to load order data');
+        }
+      } catch (err) {
+        console.error('Error fetching order data:', err);
+        setDataError(err.message || 'Failed to load order details');
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    if (orderId) {
+      fetchOrderData();
+    }
+  }, [orderId]);
 
   // Using real database IDs from seed data for testing
   const handleConfirmPayment = async () => {
@@ -81,20 +132,63 @@ export default function PaymentProcessPage({ params }) {
             <h3 className="text-sm font-medium text-gray-900 mb-2">
               Order Details
             </h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Order ID:</span>
-                <span className="font-mono text-gray-900">{orderId}</span>
+            {isLoadingData ? (
+              <div className="animate-pulse space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order ID:</span>
+                  <div className="h-4 bg-gray-300 rounded w-32"></div>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Price:</span>
+                  <div className="h-4 bg-gray-300 rounded w-20"></div>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <div className="h-4 bg-gray-300 rounded w-24"></div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Price:</span>
-                <span className="text-gray-900">25.50 USDT</span>
+            ) : dataError ? (
+              <div className="text-center text-red-600 text-sm py-2">
+                {dataError}
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Status:</span>
-                <span className="text-yellow-600 font-medium">Pending Payment</span>
+            ) : (
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order ID:</span>
+                  <span className="font-mono text-gray-900">{orderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Price:</span>
+                  <span className="text-gray-900 font-semibold">
+                    {orderData ? formatIDR(orderData.amount_idr) : 'Loading...'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className={`font-medium ${
+                    orderData?.status === 'paid' 
+                      ? 'text-green-600' 
+                      : orderData?.status === 'pending' 
+                      ? 'text-yellow-600' 
+                      : 'text-gray-600'
+                  }`}>
+                    {orderData?.status ? 
+                      orderData.status.charAt(0).toUpperCase() + orderData.status.slice(1) + 
+                      (orderData.status === 'pending' ? ' Payment' : '') 
+                      : 'Loading...'
+                    }
+                  </span>
+                </div>
+                {orderData?.created_at && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created:</span>
+                    <span className="text-gray-900">
+                      {new Date(orderData.created_at).toLocaleDateString('id-ID')}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Error Display */}
@@ -124,7 +218,7 @@ export default function PaymentProcessPage({ params }) {
           {/* Confirm Button */}
           <button
             onClick={handleConfirmPayment}
-            disabled={isLoading}
+            disabled={isLoading || isLoadingData || dataError || !orderData}
             className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200 font-medium"
           >
             {isLoading ? (
