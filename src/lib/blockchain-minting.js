@@ -666,7 +666,7 @@ export async function verifyLicenseNFTOwnership(tokenId, ownerAddress) {
  * @param {string} licenseType - License type
  * @param {string} expiryDate - Expiry date (ISO string or null)
  * @param {number} usageLimit - Usage limit (or null)
- * @param {number} priceUsdt - Price in USDT
+ * @param {number} priceBidr - Price in USDT
  * @param {string} transactionHash - Payment transaction hash
  * @param {string} walletAddress - Recipient wallet address
  * @param {string} nftContractAddress - NFT contract address
@@ -682,7 +682,7 @@ export function createLicenseRecord({
   licenseType,
   expiryDate,
   usageLimit,
-  priceUsdt,
+  priceBidr,
   transactionHash,
   walletAddress,
   nftContractAddress
@@ -692,7 +692,7 @@ export function createLicenseRecord({
     work_id: workId,
     buyer_id: buyerUserId,
     license_type: licenseType,
-    price_usdt: priceUsdt,
+    price_bidr: priceBidr,
     transaction_hash: transactionHash, // Payment transaction hash
     order_id: orderId,
     license_offering_id: licenseOfferingId,

@@ -45,7 +45,7 @@ export async function POST(request) {
       terms,
       expiryDate,
       usageLimit,
-      priceUsdt,        // Maps to price_usdt (required in existing schema)
+      priceBidr,        // Maps to price_bidr (required in existing schema)
       transactionHash   // Payment transaction hash (required in existing schema)
     } = body;
 
@@ -54,12 +54,12 @@ export async function POST(request) {
     // ==========================================
 
     // Check required fields
-    if (!buyerUserId || !workId || !licenseOfferingId || !orderId || !licenseType || !workTitle || !creatorName || !terms || !priceUsdt || !transactionHash) {
+    if (!buyerUserId || !workId || !licenseOfferingId || !orderId || !licenseType || !workTitle || !creatorName || !terms || !priceBidr || !transactionHash) {
       return NextResponse.json(
         {
           success: false,
           error: 'MISSING_FIELDS',
-          message: 'Required fields: buyerUserId, workId, licenseOfferingId, orderId, licenseType, workTitle, creatorName, terms, priceUsdt, transactionHash'
+          message: 'Required fields: buyerUserId, workId, licenseOfferingId, orderId, licenseType, workTitle, creatorName, terms, priceBidr, transactionHash'
         },
         { status: 400 }
       );
@@ -225,7 +225,7 @@ export async function POST(request) {
       terms,
       expiryDate: expiryDate || null,
       usageLimit: usageLimit !== null && usageLimit !== undefined ? usageLimit : null,
-      purchaseAmount: priceUsdt,
+      purchaseAmount: priceBidr,
       orderId,
       licenseId: null // Will be set after database insert
     });
@@ -277,7 +277,7 @@ export async function POST(request) {
       licenseType,
       expiryDate: expiryDate || null,
       usageLimit: usageLimit !== null && usageLimit !== undefined ? usageLimit : null,
-      priceUsdt,
+      priceBidr,
       transactionHash,
       walletAddress,
       nftContractAddress
