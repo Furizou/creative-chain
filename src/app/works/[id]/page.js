@@ -1,41 +1,176 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
-import { notFound } from 'next/navigation';
+import { createDemoLicenseOffering } from '@/app/actions';
 
 /**
- * Server Component to display creative work details
+ * Client Component to display creative work details with license offerings
  * @param {Object} props - Component props
  * @param {Object} props.params - Dynamic route parameters
  * @param {string} props.params.id - Work ID from the URL
- * @returns {Promise<JSX.Element>} Work details page
+ * @returns {JSX.Element} Work details page
  */
-export default async function WorkDetailsPage({ params }) {
-  const { id } = await params;
+export default function WorkDetailsPage({ params }) {
+  const router = useRouter();
+  const [work, setWork] = useState(null);
+  const [licenseOfferings, setLicenseOfferings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
+  const [workId, setWorkId] = useState(null);
 
-  try {
-    // Fetch work details from the database
-    const { data: work, error } = await supabase
-      .from('creative_works')
-      .select('*')
-      .eq('id', id)
-      .single();
+  // Extract work ID from params
+  useEffect(() => {
+    const getWorkId = async () => {
+      const resolvedParams = await params;
+      setWorkId(resolvedParams.id);
+    };
+    getWorkId();
+  }, [params]);
 
-    // Handle database errors
-    if (error) {
-      console.error('Error fetching work:', error);
-      if (error.code === 'PGRST116') {
-        // No rows returned
-        notFound();
+  // Fetch work and license offerings data
+  useEffect(() => {
+    if (!workId) return;
+
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch work details and license offerings in parallel
+        const [workResponse, licensesResponse] = await Promise.all([
+          supabase
+            .from('creative_works')
+            .select('*')
+            .eq('id', workId)
+            .single(),
+          supabase
+            .from('license_offerings')
+            .select('*')
+            .eq('work_id', workId)
+            .order('created_at', { ascending: false })
+        ]);
+
+        // Handle work data
+        if (workResponse.error) {
+          if (workResponse.error.code === 'PGRST116') {
+            router.push('/404');
+            return;
+          }
+          throw workResponse.error;
+        }
+
+        if (!workResponse.data) {
+          router.push('/404');
+          return;
+        }
+
+        // Handle license offerings data
+        if (licensesResponse.error) {
+          console.warn('Error fetching license offerings:', licensesResponse.error);
+          // Don't fail the entire page for license offerings errors
+        }
+
+        setWork(workResponse.data);
+        setLicenseOfferings(licensesResponse.data || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err.message || 'Failed to load work details');
+      } finally {
+        setIsLoading(false);
       }
-      throw error;
-    }
+    };
 
-    // Handle case where work is not found
-    if (!work) {
-      notFound();
-    }
+    fetchData();
+  }, [workId, router]);
 
-    // Check if the file is an image based on file extension
-    const isImage = work.file_url && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(work.file_url);
+  // Handle demo license creation
+  const handleCreateDemoLicense = async () => {
+    if (!workId || isCreatingDemo) return;
+
+    try {
+      setIsCreatingDemo(true);
+      const result = await createDemoLicenseOffering(workId);
+      
+      if (result.success) {
+        // Refresh license offerings
+        const { data: updatedLicenses } = await supabase
+          .from('license_offerings')
+          .select('*')
+          .eq('work_id', workId)
+          .order('created_at', { ascending: false });
+        
+        setLicenseOfferings(updatedLicenses || []);
+      } else {
+        setError(result.error || 'Failed to create demo license');
+      }
+    } catch (err) {
+      console.error('Error creating demo license:', err);
+      setError('Failed to create demo license');
+    } finally {
+      setIsCreatingDemo(false);
+    }
+  };
+
+  // Format price for display
+  const formatPrice = (price) => {
+    if (typeof price !== 'number') return 'N/A';
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-8">
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-3/4 mb-6"></div>
+                <div className="space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-96 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-8 text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Work</h1>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <button
+                onClick={() => router.back()}
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if the file is an image based on file extension
+  const isImage = work?.file_url && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(work.file_url);
 
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -189,61 +324,108 @@ export default async function WorkDetailsPage({ params }) {
                 </dl>
               </div>
             </div>
+
+            {/* License Offerings Section */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Available Licenses
+                  </h2>
+                  {process.env.NODE_ENV === 'development' && (
+                    <button
+                      onClick={handleCreateDemoLicense}
+                      disabled={isCreatingDemo}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isCreatingDemo ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Creating...
+                        </>
+                      ) : (
+                        'Create Demo License'
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-6 py-6">
+                {licenseOfferings && licenseOfferings.length > 0 ? (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {licenseOfferings.map((license) => (
+                      <div
+                        key={license.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-medium text-gray-900">
+                            {license.license_type || 'Standard License'}
+                          </h3>
+                          <span className="inline-flex items-center px-2.5 py-0.5 roundFed-full text-xs font-medium bg-green-100 text-green-800">
+                            Available
+                          </span>
+                        </div>
+
+                        <div className="mb-4">
+                          <p className="text-2xl font-bold text-gray-900">
+                            {formatPrice(license.price_idr)}
+                          </p>
+                          {license.description && (
+                            <p className="text-sm text-gray-600 mt-2">
+                              {license.description}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="text-xs text-gray-500 mb-4 space-y-1">
+                          <div>Created: {new Date(license.created_at).toLocaleDateString()}</div>
+                          {license.valid_until && (
+                            <div>Valid until: {new Date(license.valid_until).toLocaleDateString()}</div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => router.push(`/works/${workId}/checkout?license_id=${license.id}`)}
+                          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                        >
+                          Buy Now
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="mx-auto h-12 w-12 text-gray-400">
+                      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="mt-4 text-sm font-medium text-gray-900">No licenses available</h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      There are currently no license offerings for this work.
+                    </p>
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="mt-4">
+                        <button
+                          onClick={handleCreateDemoLicense}
+                          disabled={isCreatingDemo}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {isCreatingDemo ? 'Creating...' : 'Create Demo License'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
-  } catch (error) {
-    console.error('Unexpected error:', error);
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Something went wrong
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Unable to load work details. Please try again later.
-          </p>
-          <a
-            href="/upload"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Back to Upload
-          </a>
-        </div>
-      </div>
-    );
-  }
-}
-
-/**
- * Generate metadata for the page
- * @param {Object} props - Component props
- * @param {Object} props.params - Dynamic route parameters
- * @returns {Promise<Object>} Page metadata
- */
-export async function generateMetadata({ params }) {
-  const { id } = await params;
-  
-  try {
-    const { data: work } = await supabase
-      .from('creative_works')
-      .select('title, description')
-      .eq('id', id)
-      .single();
-
-    if (work) {
-      return {
-        title: `${work.title} | Creative Chain`,
-        description: work.description || 'View creative work details',
-      };
-    }
-  } catch (error) {
-    console.error('Error generating metadata:', error);
-  }
-
-  return {
-    title: 'Work Details | Creative Chain',
-    description: 'View creative work details',
-  };
 }
