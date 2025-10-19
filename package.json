@@ -11,7 +11,8 @@
     "test": "node --test src/tests/*.test.js",
     "test:blockchain": "node --test src/tests/blockchain.test.js",
     "test:wallet": "node --test src/tests/wallet-manager.test.js",
-    "test:blockchain-api": "node --test src/tests/blockchain-api.test.js"
+    "test:blockchain-api": "node --test src/tests/blockchain-api.test.js",
+    "test:verify-certificate": "node --test src/tests/verify-certificate-api.test.js"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
