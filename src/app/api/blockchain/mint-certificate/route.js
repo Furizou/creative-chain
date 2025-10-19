@@ -114,12 +114,13 @@ export async function POST(request) {
     }
 
     // ==========================================
-    // STEP 3: GET USER'S CUSTODIAL WALLET
+    // STEP 3: GET USER'S CUSTODIAL WALLET (for receiving the NFT)
     // ==========================================
 
-    const wallet = await getUserCustodialWallet(userId);
+    // Get user's wallet address (where NFT will be sent)
+    const walletInfo = await getUserWalletAddress(userId);
 
-    if (!wallet) {
+    if (!walletInfo) {
       return NextResponse.json(
         {
           success: false,
@@ -130,10 +131,10 @@ export async function POST(request) {
       );
     }
 
-    const walletAddress = wallet.address;
-    const privateKey = wallet.privateKey;
+    const walletAddress = walletInfo.address;
 
     console.log(`Minting certificate for user ${userId} to wallet ${walletAddress}`);
+    console.log(`Using master minting wallet for transaction`);
 
     // ==========================================
     // STEP 4: CREATE NFT METADATA
@@ -151,15 +152,15 @@ export async function POST(request) {
     console.log('Created metadata:', JSON.stringify(metadata, null, 2));
 
     // ==========================================
-    // STEP 5: MINT NFT ON BLOCKCHAIN
+    // STEP 5: MINT NFT ON BLOCKCHAIN (using master wallet)
     // ==========================================
 
     let mintResult;
     try {
       mintResult = await mintCopyrightNFT({
         recipientAddress: walletAddress,
-        privateKey,
-        metadata
+        metadata,
+        useMasterWallet: true  // Use the master minting wallet
       });
 
       console.log('Minting successful:', mintResult);
@@ -198,11 +199,14 @@ export async function POST(request) {
     // STEP 6: SAVE CERTIFICATE TO DATABASE
     // ==========================================
 
+    // Generate a UUID for workId if not provided (database requires it)
+    const effectiveWorkId = workId || crypto.randomUUID();
+
     const certificateRecord = createCertificateRecord({
       mintResult,
       metadata,
       userId,
-      workId: workId || null,
+      workId: effectiveWorkId,
       walletAddress
     });
 
