@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node --test src/tests/*.test.js",
     "test:blockchain": "node --test src/tests/blockchain.test.js",
     "test:wallet": "node --test src/tests/wallet-manager.test.js",
-    "test:blockchain-api": "node --test src/tests/blockchain-api.test.js"
+    "test:blockchain-api": "node --test src/tests/blockchain-api.test.js",
+    "test:verify-certificate": "node --test src/tests/verify-certificate-api.test.js"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -31,6 +32,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "pino-pretty": "^13.1.2",
     "tailwindcss": "^4"
   }
 }

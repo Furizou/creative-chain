@@ -30,12 +30,21 @@ export function getThirdwebSDK() {
 // 2. CONTRACT ADDRESSES
 // ============================================
 /**
- * Smart contract addresses on Polygon Amoy
+ * Get contract addresses (dynamic to support env loading)
+ * @returns {Object} Contract addresses
  */
-export const CONTRACT_ADDRESSES = {
-  COPYRIGHT: process.env.NEXT_PUBLIC_COPYRIGHT_CONTRACT,
-  LICENSE: process.env.NEXT_PUBLIC_LICENSE_CONTRACT,
-};
+export function getContractAddresses() {
+  return {
+    COPYRIGHT: process.env.NEXT_PUBLIC_COPYRIGHT_CONTRACT || process.env.NEXT_PUBLIC_COPYRIGHT_NFT_CONTRACT,
+    LICENSE: process.env.NEXT_PUBLIC_LICENSE_CONTRACT || process.env.NEXT_PUBLIC_LICENSE_NFT_CONTRACT,
+  };
+}
+
+/**
+ * Smart contract addresses on Polygon Amoy
+ * @deprecated Use getContractAddresses() for dynamic loading
+ */
+export const CONTRACT_ADDRESSES = getContractAddresses();
 
 // ============================================
 // 3. CHAIN CONFIGURATION
