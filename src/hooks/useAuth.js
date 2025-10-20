@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export function useAuth() {
@@ -6,22 +6,19 @@ export function useAuth() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [supabase] = useState(() => createClient())
+  const loadingTimeoutRef = useRef(null)
+  const initializedRef = useRef(false)
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (session?.user) {
-        setUser(session.user)
-        await fetchProfile(session.user.id)
-      } else {
-        setUser(null)
-        setProfile(null)
-      }
-      
+    // Prevent multiple initializations
+    if (initializedRef.current) return
+    initializedRef.current = true
+
+    // Safety timeout: if loading takes more than 5 seconds, force it to false
+    loadingTimeoutRef.current = setTimeout(() => {
+      console.warn('⚠️  Auth initialization timeout - forcing loading to false')
       setLoading(false)
-    }
+    }, 5000)
 
     // Fetch user profile data
     const fetchProfile = async (userId) => {
@@ -34,12 +31,46 @@ export function useAuth() {
 
         if (error) {
           console.error('Error fetching profile:', error)
+          return null
+        }
+
+        return data
+      } catch (error) {
+        console.error('Profile fetch error:', error)
+        return null
+      }
+    }
+
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        console.log('🔍 useAuth: Checking initial session...')
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('Error getting session:', error)
+          setLoading(false)
+          clearTimeout(loadingTimeoutRef.current)
           return
         }
 
-        setProfile(data)
+        if (session?.user) {
+          console.log('✅ useAuth: User is authenticated:', session.user.email)
+          setUser(session.user)
+          const profileData = await fetchProfile(session.user.id)
+          setProfile(profileData)
+        } else {
+          console.log('❌ useAuth: No active session')
+          setUser(null)
+          setProfile(null)
+        }
+
+        setLoading(false)
+        clearTimeout(loadingTimeoutRef.current)
       } catch (error) {
-        console.error('Profile fetch error:', error)
+        console.error('Fatal error in getInitialSession:', error)
+        setLoading(false)
+        clearTimeout(loadingTimeoutRef.current)
       }
     }
 
@@ -48,18 +79,31 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 useAuth: Auth state changed:', event)
+
         if (session?.user) {
           setUser(session.user)
-          await fetchProfile(session.user.id)
+          const profileData = await fetchProfile(session.user.id)
+          setProfile(profileData)
         } else {
           setUser(null)
           setProfile(null)
         }
-        setLoading(false)
+
+        // Only set loading to false after initial load
+        if (loading) {
+          setLoading(false)
+          clearTimeout(loadingTimeoutRef.current)
+        }
       }
     )
 
-    return () => subscription?.unsubscribe()
+    return () => {
+      subscription?.unsubscribe()
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current)
+      }
+    }
   }, [supabase])
 
   const signOut = async () => {
