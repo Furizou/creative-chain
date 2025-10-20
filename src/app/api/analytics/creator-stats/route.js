@@ -54,7 +54,7 @@ export async function GET(req) {
     const { data: revenue, error: revenueError } = await supabase
       .from('licenses')
       .select(`
-        price_usdt,
+        price_bidr,
         work:work_id (
           creator_id
         )
@@ -64,7 +64,7 @@ export async function GET(req) {
     if (revenueError) throw revenueError;
 
     // Calculate total revenue
-    const totalRevenue = revenue.reduce((sum, license) => sum + Number(license.price_usdt), 0);
+    const totalRevenue = revenue.reduce((sum, license) => sum + Number(license.price_bidr), 0);
 
     // Get total sales (completed licenses)
     const totalSales = revenue.length;
