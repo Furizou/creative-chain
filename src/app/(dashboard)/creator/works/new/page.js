@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import PageHeader from '@/components/PageHeader';
 import { AlertCircle, Upload } from 'lucide-react';
 
@@ -12,7 +12,7 @@ export default function NewWorkPage() {
   const [error, setError] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const handleSubmit = async (e) => {
     e.preventDefault();

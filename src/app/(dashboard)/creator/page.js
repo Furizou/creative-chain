@@ -3,11 +3,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import MetricsCard from '@/components/dashboard/MetricsCard'
 import { Music, FileText, TrendingUp, Wallet } from 'lucide-react'
 
-const supabase = createClientComponentClient()
+const supabase = createClient()
 
 export default function CreatorDashboard() {
   const [stats, setStats] = useState({
