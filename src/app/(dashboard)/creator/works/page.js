@@ -4,8 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Music, AlertCircle } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import WorkCard from '@/components/creator/WorkCard';
-import supabase from '@/lib/supabase/client-component';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+
+// Create supabase client once
+const supabase = createClient();
 
 export default function CreatorWorks() {
   const [works, setWorks] = useState([]);

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import supabase from "@/lib/supabase/client-component";
+import { createClient } from "@/lib/supabase/client";
 import PageHeader from '@/components/PageHeader';
 import WorkCard from '@/components/WorkCard';
 import { AlertCircle } from 'lucide-react';
@@ -13,6 +13,8 @@ export default function MyWorksPage() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    const supabase = createClient();
+
     const fetchWorks = async () => {
       try {
         setLoading(true);
