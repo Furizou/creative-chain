@@ -1,23 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function Navbar() {
+/**
+ * OLD NAVBAR - WITH SCROLL BEHAVIOR
+ * This is the original navbar that changes to a compact floating version when scrolled.
+ * Kept for reference but not currently in use.
+ */
+export default function NavbarOld() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, profile, loading, signOut, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
   };
 
-  const AuthButtons = () => {
+  const AuthButtons = ({ compact = false }) => {
     if (loading) {
       return (
-        <div className="px-4 py-2 bg-gray-600 rounded-lg animate-pulse">
+        <div className={`${compact ? 'px-4 py-1.5' : 'px-4 py-2'} bg-gray-600 rounded-lg animate-pulse`}>
           <div className="w-16 h-4 bg-gray-500 rounded"></div>
         </div>
       );
@@ -28,7 +43,7 @@ export default function Navbar() {
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center space-x-3 hover:text-primary transition-colors group"
+            className={`flex items-center space-x-3 ${compact ? 'text-sm' : ''} hover:text-primary transition-colors group`}
           >
             <div className="relative">
               <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
@@ -135,14 +150,14 @@ export default function Navbar() {
     }
 
     return (
-      <div className="flex items-center space-x-4">
+      <div className={`flex items-center ${compact ? 'space-x-2' : 'space-x-4'}`}>
         <Link href="/login">
-          <button className="text-white hover:text-primary transition-colors font-semibold">
+          <button className={`text-white hover:text-primary transition-colors font-semibold ${compact ? 'text-sm' : ''}`}>
             Login
           </button>
         </Link>
         <Link href="/signup">
-          <button className="bg-primary text-structural px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+          <button className={`bg-primary text-structural ${compact ? 'px-4 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-semibold hover:opacity-90 transition-opacity`}>
             Get Started
           </button>
         </Link>
@@ -152,8 +167,8 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Sticky Navbar */}
-      <nav className="sticky top-0 z-50 bg-structural text-white shadow-lg">
+      {/* Original Navbar */}
+      <nav className="bg-structural text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -310,6 +325,52 @@ export default function Navbar() {
           )}
         </div>
       </nav>
+
+      {/* Floating Navbar - appears when scrolled */}
+      <div
+        className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${
+          isScrolled ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+        }`}
+      >
+        <div className="bg-structural text-white shadow-2xl rounded-full px-6 py-3 flex items-center space-x-6 backdrop-blur-sm bg-opacity-95">
+          {/* Compact Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="bg-primary text-structural px-2 py-1 rounded font-black text-sm">
+              CC
+            </div>
+            <span className="font-heading font-bold text-sm hidden sm:inline">CreativeChain</span>
+          </Link>
+
+          {/* Compact Navigation */}
+          <div className="flex items-center space-x-4 text-sm">
+            {!isAuthenticated ? (
+              <>
+                <Link href="/" className="hover:text-primary transition-colors">
+                  Home
+                </Link>
+                <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
+                  Market
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/creator" className="hover:text-primary transition-colors">
+                  Dashboard
+                </Link>
+                <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
+                  Market
+                </Link>
+                <Link href="/creator/works" className="hover:text-primary transition-colors hidden sm:inline">
+                  Works
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Compact Auth */}
+          <AuthButtons compact />
+        </div>
+      </div>
 
       {/* Click outside to close menus */}
       {(showMobileMenu || showUserMenu) && (
