@@ -25,8 +25,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = async (e) => {
+    e?.stopPropagation(); // Prevent event bubbling
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
     setShowUserMenu(false);
   };
 
