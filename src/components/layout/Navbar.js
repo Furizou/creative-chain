@@ -188,6 +188,9 @@ export default function Navbar() {
                   <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
                     Marketplace
                   </Link>
+                  <Link href="/verify" className="hover:text-primary transition-colors font-body">
+                    Verify
+                  </Link>
                 </>
               ) : (
                 // Logged in user navigation
@@ -203,6 +206,9 @@ export default function Navbar() {
                   </Link>
                   <Link href="/creator/analytics" className="hover:text-primary transition-colors font-body">
                     Analytics
+                  </Link>
+                  <Link href="/verify" className="hover:text-primary transition-colors font-body">
+                    Verify
                   </Link>
                 </>
               )}
@@ -239,6 +245,9 @@ export default function Navbar() {
                     </Link>
                     <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                       Marketplace
+                    </Link>
+                    <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                      Verify
                     </Link>
                     <div className="px-3 py-2 space-y-2 border-t border-gray-700 mt-4 pt-4">
                       <Link href="/login" className="block">
@@ -294,6 +303,14 @@ export default function Navbar() {
                         My Works
                       </span>
                     </Link>
+                    <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Verify
+                      </span>
+                    </Link>
                     <Link href="/profile" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                       <span className="flex items-center">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,6 +363,9 @@ export default function Navbar() {
                 <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
                   Market
                 </Link>
+                <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
+                  Verify
+                </Link>
               </>
             ) : (
               <>
@@ -357,6 +377,9 @@ export default function Navbar() {
                 </Link>
                 <Link href="/creator/works" className="hover:text-primary transition-colors hidden sm:inline">
                   Works
+                </Link>
+                <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
+                  Verify
                 </Link>
               </>
             )}
