@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function POST(request) {
   // Generate unique request ID for debugging
   const requestId = `login_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
+
   console.log(`🔵 [${requestId}] Starting login process`);
-  
+
   try {
     const { email, password } = await request.json();
-    
+
     console.log(`🔍 [${requestId}] Login attempt:`, {
       email: email ? '***@***.***' : '',
       hasPassword: !!password,
@@ -33,7 +33,22 @@ export async function POST(request) {
 
     // Create Supabase client for route handler
     const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          },
+        },
+      }
+    );
     console.log(`✅ [${requestId}] Supabase client created`);
 
     // Attempt to sign in
@@ -142,7 +157,11 @@ export async function POST(request) {
     };
 
     console.log(`✅ [${requestId}] Login completed successfully`);
-    
+
+    // The session cookies should be automatically set by the Supabase client
+    // Let's verify by logging the cookies that will be sent
+    console.log(`🔍 [${requestId}] Session cookies should now be set via Supabase client`);
+
     return NextResponse.json(loginResponse);
 
   } catch (error) {

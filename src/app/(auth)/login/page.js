@@ -53,33 +53,33 @@ export default function LoginPage() {
     setMessage('');
 
     try {
-      // Call our login API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        }),
+      // Use client-side Supabase to login directly
+      // This ensures session is stored in localStorage
+      const supabase = createClient();
+
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+      if (authError) {
+        throw new Error(authError.message || 'Login failed');
       }
 
-      // Successful login - redirect to dashboard
-      router.push('/creator');
-      router.refresh(); // Refresh to update auth state
+      if (!authData.session) {
+        throw new Error('No session created');
+      }
+
+      console.log('✅ Login successful, session stored in localStorage');
+
+      // Don't set loading to false - we're redirecting
+      // Navigate to dashboard
+      window.location.href = '/creator';
 
     } catch (error) {
       console.error('Login error:', error);
       setErrors({ submit: error.message });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only stop loading on error
     }
   };
 
@@ -118,38 +118,24 @@ export default function LoginPage() {
         hasPassword: !!creds.password
       });
 
-      console.log(`🔵 [CLIENT-${clientRequestId}] Sending login request`);
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(creds),
-      });
+      // Use client-side Supabase to login directly
+      const supabase = createClient();
 
-      console.log(`🔍 [CLIENT-${clientRequestId}] API response status: ${response.status} ${response.statusText}`);
+      console.log(`🔵 [CLIENT-${clientRequestId}] Attempting Supabase authentication`);
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword(creds);
 
-      let data;
-      try {
-        data = await response.json();
-        console.log(`🔍 [CLIENT-${clientRequestId}] API response data:`, data);
-      } catch (jsonError) {
-        console.error(`❌ [CLIENT-${clientRequestId}] Failed to parse JSON response:`, jsonError);
-        throw new Error('Invalid response from server');
+      if (authError) {
+        console.error(`❌ [CLIENT-${clientRequestId}] Login failed:`, authError);
+        throw new Error(authError.message || 'Demo login failed');
       }
 
-      if (!response.ok) {
-        console.error(`❌ [CLIENT-${clientRequestId}] Login failed:`, {
-          status: response.status,
-          error: data.error,
-          details: data.details
-        });
-        throw new Error(data.error || 'Demo login failed');
+      if (!authData.session) {
+        throw new Error('No session created');
       }
 
       console.log(`✅ [CLIENT-${clientRequestId}] Demo login successful, redirecting to dashboard`);
-      router.push('/creator');
-      router.refresh();
+      // Don't set loading to false - we're redirecting
+      window.location.href = '/creator';
 
     } catch (error) {
       console.error(`❌ [CLIENT-${clientRequestId}] Demo login error:`, {
@@ -158,9 +144,7 @@ export default function LoginPage() {
         name: error.name
       });
       setErrors({ submit: error.message });
-    } finally {
-      setIsLoading(false);
-      console.log(`🔵 [CLIENT-${clientRequestId}] Demo login process completed`);
+      setIsLoading(false); // Only stop loading on error
     }
   };
 

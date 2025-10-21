@@ -1,23 +1,38 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
 export async function middleware(req) {
-  const res = NextResponse.next()
-  
+  let res = NextResponse.next()
+
   // Check if Supabase is properly configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  
+
   // If Supabase is not configured, allow all requests (development mode)
-  if (!supabaseUrl || !supabaseAnonKey || 
-      supabaseUrl === 'your_supabase_url_here' || 
+  if (!supabaseUrl || !supabaseAnonKey ||
+      supabaseUrl === 'your_supabase_url_here' ||
       supabaseAnonKey === 'your_supabase_anon_key_here') {
-    
+
     console.warn('⚠️  Supabase not configured - authentication middleware disabled');
     return res
   }
 
-  const supabase = createMiddlewareClient({ req, res })
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return req.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
+        res = NextResponse.next({
+          request: req,
+        })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          res.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
 
   const { pathname } = req.nextUrl
 
@@ -79,39 +94,10 @@ export async function middleware(req) {
     return res
   }
 
-  // Normal authentication flow when Supabase is configured
-  let session = null
-  try {
-    const { data } = await supabase.auth.getSession()
-    session = data.session
-  } catch (error) {
-    console.error('Error getting session:', error)
-    // If there's an error getting session, treat as unauthenticated
-  }
-
-  // Handle authentication redirects
-  if (!session) {
-    // Redirect unauthenticated users from protected pages
-    if (isProtectedPath) {
-      const redirectUrl = new URL('/login', req.url)
-      redirectUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    // Return 401 for protected API routes
-    if (isProtectedApiPath) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-  } else {
-    // Redirect authenticated users away from auth pages
-    if (pathname === '/login' || pathname === '/signup') {
-      const redirectTo = req.nextUrl.searchParams.get('redirect') || '/creator'
-      return NextResponse.redirect(new URL(redirectTo, req.url))
-    }
-  }
+  // Skip middleware auth checks - we're using client-side only auth
+  // The middleware can't access localStorage where the session is stored
+  // Protected routes will be handled client-side by the useAuth hook
+  console.log('✅ Middleware: Skipping auth check (using client-side auth)')
 
   return res
 }
