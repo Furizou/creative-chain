@@ -4,36 +4,46 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 // Singleton instance to avoid multiple client creations
 let browserClient = null
 
-// Clear old auth-helpers cookies that are incompatible with @supabase/ssr
-// Only run this once using localStorage flag
-function clearLegacyAuthCookies() {
-  if (typeof document === 'undefined' || typeof localStorage === 'undefined') return
+// Clear old localStorage and incompatible cookies from previous auth setup
+// Only run this once using sessionStorage flag (don't use localStorage since we're clearing it)
+function clearLegacyAuth() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return
 
-  // Check if we've already cleared legacy cookies
-  const hasCleared = localStorage.getItem('supabase-legacy-cookies-cleared')
+  // Check if we've already cleared legacy auth
+  const hasCleared = sessionStorage.getItem('supabase-legacy-auth-cleared')
   if (hasCleared === 'true') return
 
-  const cookies = document.cookie.split(';')
-  let cleared = false
-
-  cookies.forEach(cookie => {
-    const cookieStr = cookie.trim()
-    const [name, value] = cookieStr.split('=')
-
-    // Only clear cookies that have the old base64- prefix format
-    if (name.startsWith('sb-') && value && value.startsWith('base64-')) {
-      console.log(`🧹 Clearing legacy cookie: ${name}`)
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-      cleared = true
+  // Clear all localStorage items related to Supabase
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-')) {
+        keysToRemove.push(key);
+      }
     }
-  })
+    keysToRemove.forEach(key => {
+      console.log(`🧹 Clearing legacy localStorage: ${key}`)
+      localStorage.removeItem(key);
+    });
 
-  if (cleared) {
-    console.log('✅ Legacy auth cookies cleared - please log in again')
-    localStorage.setItem('supabase-legacy-cookies-cleared', 'true')
-  } else {
-    // Mark as cleared even if no cookies found, so we don't check again
-    localStorage.setItem('supabase-legacy-cookies-cleared', 'true')
+    // Clear old auth-helpers cookies
+    const cookies = document.cookie.split(';')
+    cookies.forEach(cookie => {
+      const cookieStr = cookie.trim()
+      const [name, value] = cookieStr.split('=')
+
+      // Clear old auth-helpers cookies (they have a different format)
+      if (name.startsWith('sb-') && value && value.startsWith('base64-')) {
+        console.log(`🧹 Clearing legacy cookie: ${name}`)
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+      }
+    })
+
+    console.log('✅ Legacy auth cleared - ready to use cookie-based auth')
+    sessionStorage.setItem('supabase-legacy-auth-cleared', 'true')
+  } catch (error) {
+    console.error('❌ Error clearing legacy auth:', error)
   }
 }
 
@@ -54,8 +64,8 @@ export function createClient() {
     url: supabaseUrl?.substring(0, 20) + '...',
   })
 
-  // Clear legacy cookies on first load
-  clearLegacyAuthCookies()
+  // Clear legacy auth on first load
+  clearLegacyAuth()
 
   // If we don't have valid configuration, return a mock client
   if (!supabaseUrl || !supabaseKey ||
@@ -89,22 +99,55 @@ export function createClient() {
     }
   }
 
-  console.log('✅ Supabase client: Creating real Supabase client with @supabase/supabase-js')
+  console.log('✅ Supabase client: Creating real Supabase client with @supabase/ssr')
 
-  // Create and cache the browser client using standard supabase-js
-  // This uses localStorage by default which works better with SSR
+  // Import createBrowserClient from @supabase/ssr for better Next.js integration
+  const { createBrowserClient } = require('@supabase/ssr')
+
+  // Create and cache the browser client using @supabase/ssr
+  // This uses cookies by default which works better with Next.js middleware
   try {
-    browserClient = createSupabaseClient(supabaseUrl, supabaseKey, {
-      auth: {
-        storageKey: `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false, // Disable URL session detection - might be causing hang
+    browserClient = createBrowserClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        get(name) {
+          if (typeof document === 'undefined') return undefined;
+          const cookies = document.cookie.split(';');
+          for (const cookie of cookies) {
+            const [cookieName, cookieValue] = cookie.trim().split('=');
+            if (cookieName === name) {
+              return decodeURIComponent(cookieValue);
+            }
+          }
+          return undefined;
+        },
+        set(name, value, options) {
+          if (typeof document === 'undefined') return;
+          let cookieString = `${name}=${encodeURIComponent(value)}`;
+          if (options?.maxAge) {
+            cookieString += `; max-age=${options.maxAge}`;
+          }
+          if (options?.path) {
+            cookieString += `; path=${options.path}`;
+          }
+          if (options?.domain) {
+            cookieString += `; domain=${options.domain}`;
+          }
+          if (options?.sameSite) {
+            cookieString += `; samesite=${options.sameSite}`;
+          }
+          if (options?.secure) {
+            cookieString += '; secure';
+          }
+          document.cookie = cookieString;
+        },
+        remove(name, options) {
+          if (typeof document === 'undefined') return;
+          this.set(name, '', { ...options, maxAge: 0 });
+        },
       },
     })
 
-    console.log('✅ Supabase client created successfully')
+    console.log('✅ Supabase client created successfully with cookie-based storage')
   } catch (error) {
     console.error('❌ Failed to create Supabase client:', error)
     throw error

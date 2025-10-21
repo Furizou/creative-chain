@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 export async function GET(req) {
   try {
@@ -11,8 +10,7 @@ export async function GET(req) {
 
     // If no creator_id provided, get from authenticated session
     if (!creatorId) {
-      const cookieStore = cookies();
-      const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+      const supabase = await createServerClient();
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session?.user) {
