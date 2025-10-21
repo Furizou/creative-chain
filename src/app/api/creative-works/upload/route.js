@@ -2,6 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
+import { getUserWalletAddress } from '@/lib/wallet-manager';
+import {
+  createNFTMetadata,
+  mintCopyrightNFT,
+  createCertificateRecord
+} from '@/lib/blockchain-minting';
 
 export async function POST(request) {
   try {
@@ -148,8 +154,100 @@ export async function POST(request) {
       );
     }
 
-    // 6. Add Minting Placeholder
-    // TODO: Trigger certificate minting process
+    // 6. Mint Copyright NFT Certificate
+    let certificateResult = null;
+    let mintingError = null;
+
+    try {
+      // Get user profile for creator name
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('full_name, username')
+        .eq('id', userId)
+        .single();
+
+      const creatorName = profile?.full_name || profile?.username || 'Anonymous';
+
+      console.log(`Starting copyright certificate minting for work ${workData.id}`);
+
+      // Get user's wallet address
+      const walletInfo = await getUserWalletAddress(userId);
+
+      if (!walletInfo) {
+        throw new Error('User does not have a custodial wallet');
+      }
+
+      const walletAddress = walletInfo.address;
+      console.log(`Minting certificate to wallet: ${walletAddress}`);
+
+      // Create NFT metadata
+      const metadata = createNFTMetadata({
+        workTitle: title.toString(),
+        workDescription: description.toString(),
+        workHash: fileHash,
+        category: category.toString().toLowerCase(),
+        creatorName,
+        workId: workData.id
+      });
+
+      console.log('Created NFT metadata:', JSON.stringify(metadata, null, 2));
+
+      // Mint copyright NFT
+      const mintResult = await mintCopyrightNFT({
+        recipientAddress: walletAddress,
+        metadata,
+        useMasterWallet: true
+      });
+
+      console.log('Minting successful:', mintResult);
+
+      // Create certificate record
+      const certificateRecord = createCertificateRecord({
+        mintResult,
+        metadata,
+        userId,
+        workId: workData.id,
+        walletAddress
+      });
+
+      // Save certificate to database
+      const { data: certificate, error: certError } = await supabaseAdmin
+        .from('copyright_certificates')
+        .insert(certificateRecord)
+        .select()
+        .single();
+
+      if (certError) {
+        console.error('Certificate database save error:', certError);
+        throw new Error(`Failed to save certificate: ${certError.message}`);
+      }
+
+      console.log(`Certificate ${certificate.id} saved successfully`);
+
+      // Update creative_works table with NFT info
+      const { error: updateError } = await supabaseAdmin
+        .from('creative_works')
+        .update({
+          nft_token_id: mintResult.tokenId,
+          nft_tx_hash: mintResult.transactionHash
+        })
+        .eq('id', workData.id);
+
+      if (updateError) {
+        console.error('Failed to update creative_works with NFT data:', updateError);
+      }
+
+      certificateResult = {
+        certificateId: certificate.id,
+        tokenId: certificate.token_id,
+        transactionHash: certificate.transaction_hash,
+        polygonscanUrl: certificate.polygonscan_url
+      };
+
+    } catch (error) {
+      mintingError = error.message;
+      console.error('Error during certificate minting:', error);
+    }
 
     console.log(`Creative work ${workData.id} uploaded successfully by user ${userId}`);
 
@@ -160,7 +258,13 @@ export async function POST(request) {
         message: 'Creative work uploaded successfully',
         id: workData.id,
         file_url: fileUrl,
-        file_hash: fileHash
+        file_hash: fileHash,
+        certificate: certificateResult ? {
+          tokenId: certificateResult.tokenId,
+          transactionHash: certificateResult.transactionHash,
+          polygonscanUrl: certificateResult.polygonscanUrl
+        } : null,
+        mintingError: mintingError
       },
       { status: 201 }
     );
