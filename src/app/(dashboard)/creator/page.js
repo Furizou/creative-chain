@@ -201,7 +201,7 @@ export default function CreatorDashboard() {
             <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">No works yet. Upload your first creative work!</p>
             <Link 
-              href="/creator/upload"
+              href="/creator/works/new"
               className="bg-primary text-structural px-6 py-2 rounded-lg font-semibold hover:opacity-80 inline-block"
             >
               Upload Now

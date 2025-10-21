@@ -36,7 +36,7 @@ export default function ConfigureLicensePage() {
       if (!workId) return setPrefetching(false);
       setPrefetching(true);
       const { data, error: fetchErr } = await supabase
-        .from("works")
+        .from("creative_works")
         .select("*")
         .eq("id", workId)
         .single();

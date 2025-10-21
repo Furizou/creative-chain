@@ -18,39 +18,19 @@ export default function CreatorWorks() {
     if (!userSession?.user?.id) return;
 
     try {
-      // Try to get the list of tables first
-      const { data: tables, error: tablesError } = await supabase
+      // Fetch from creative_works table
+      const { data, error: worksError } = await supabase
         .from('creative_works')
         .select('*')
-        .limit(1);
-      
-      if (tablesError) {
-        // If creative_works doesn't exist, try works
-        const { data, error: worksError } = await supabase
-          .from('works')
-          .select('*')
-          .eq('creator_id', userSession.user.id)
-          .order('created_at', { ascending: false });
+        .eq('creator_id', userSession.user.id)
+        .order('created_at', { ascending: false });
 
-        if (worksError) {
-          throw new Error('Could not find works table. Please check your database setup.');
-        }
-
-        setWorks(data || []);
-        setError(null);
-      } else {
-        // If creative_works exists, use it
-        const { data, error: worksError } = await supabase
-          .from('creative_works')
-          .select('*')
-          .eq('creator_id', userSession.user.id)
-          .order('created_at', { ascending: false });
-
-        if (worksError) throw worksError;
-
-        setWorks(data || []);
-        setError(null);
+      if (worksError) {
+        throw worksError;
       }
+
+      setWorks(data || []);
+      setError(null);
     } catch (error) {
       console.error('Error fetching works:', error);
       setError(error.message || 'Failed to load your works');
