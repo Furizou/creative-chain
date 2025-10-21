@@ -8,7 +8,13 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { user, profile, loading, signOut, isAuthenticated } = useAuth();
+
+  // Prevent hydration errors by only rendering auth-dependent content after mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,7 +31,8 @@ export default function Navbar() {
   };
 
   const AuthButtons = ({ compact = false }) => {
-    if (loading) {
+    // Show loading skeleton during SSR and initial client load
+    if (!isMounted || loading) {
       return (
         <div className={`${compact ? 'px-4 py-1.5' : 'px-4 py-2'} bg-gray-600 rounded-lg animate-pulse`}>
           <div className="w-16 h-4 bg-gray-500 rounded"></div>
@@ -176,8 +183,8 @@ export default function Navbar() {
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              {!isAuthenticated ? (
-                // Guest navigation
+              {!isMounted || !isAuthenticated ? (
+                // Guest navigation (also shown during SSR to prevent hydration errors)
                 <>
                   <Link href="/" className="hover:text-primary transition-colors font-body">
                     Home
@@ -193,7 +200,7 @@ export default function Navbar() {
                   </Link>
                 </>
               ) : (
-                // Logged in user navigation
+                // Logged in user navigation (only shown after mount)
                 <>
                   <Link href="/creator" className="hover:text-primary transition-colors font-body">
                     Dashboard
@@ -234,8 +241,8 @@ export default function Navbar() {
           {showMobileMenu && (
             <div className="md:hidden bg-structural border-t border-gray-700">
               <div className="px-2 pt-2 pb-3 space-y-1">
-                {!isAuthenticated ? (
-                  // Guest mobile menu
+                {!isMounted || !isAuthenticated ? (
+                  // Guest mobile menu (also shown during SSR to prevent hydration errors)
                   <>
                     <Link href="/" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                       Home
@@ -355,7 +362,7 @@ export default function Navbar() {
 
           {/* Compact Navigation */}
           <div className="flex items-center space-x-4 text-sm">
-            {!isAuthenticated ? (
+            {!isMounted || !isAuthenticated ? (
               <>
                 <Link href="/" className="hover:text-primary transition-colors">
                   Home
