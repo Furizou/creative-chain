@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { createDemoLicenseOffering } from '@/app/actions';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Client Component to display creative work details with license offerings
@@ -13,6 +14,7 @@ import { createDemoLicenseOffering } from '@/app/actions';
 export default function WorkDetailsPage() {
   const router = useRouter();
   const { id: workId } = useParams();
+  const { user, profile } = useAuth();
   const [work, setWork] = useState(null);
   const [licenseOfferings, setLicenseOfferings] = useState([]);
   const [history, setHistory] = useState([]);
@@ -35,7 +37,10 @@ export default function WorkDetailsPage() {
         const [workResponse, licensesResponse] = await Promise.all([
           supabase
             .from('creative_works')
-            .select('*')
+            .select(`
+              *,
+              profiles!creator_id(id, username, full_name)
+            `)
             .eq('id', workId)
             .single(),
           supabase
@@ -235,6 +240,9 @@ export default function WorkDetailsPage() {
   // Check if the file is an image
   const isImage = work?.file_url && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(work.file_url);
 
+  // Check if logged-in user is the creator
+  const isCreator = user && work?.creator_id === user.id;
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -319,6 +327,18 @@ export default function WorkDetailsPage() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   {work.title}
                 </h1>
+                {work.profiles && (
+                  <div className="flex items-center text-sm text-gray-600 mt-2">
+                    <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>
+                      Created by <span className="font-medium text-gray-900">
+                        {work.profiles.full_name || work.profiles.username || 'Unknown Creator'}
+                      </span>
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Divider */}
@@ -413,25 +433,38 @@ export default function WorkDetailsPage() {
                     <h2 className="text-lg font-semibold text-gray-900">
                       Available Licenses
                     </h2>
-                    {process.env.NODE_ENV === 'development' && (
-                      <button
-                        onClick={handleCreateDemoLicense}
-                        disabled={isCreatingDemo}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isCreatingDemo ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Creating...
-                          </>
-                        ) : (
-                          'DEV: Create Demo License'
-                        )}
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isCreator && (
+                        <button
+                          onClick={() => router.push(`/creator/works/${workId}/configure`)}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Configure License
+                        </button>
+                      )}
+                      {process.env.NODE_ENV === 'development' && (
+                        <button
+                          onClick={handleCreateDemoLicense}
+                          disabled={isCreatingDemo}
+                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isCreatingDemo ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Creating...
+                            </>
+                          ) : (
+                            'DEV: Create Demo License'
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
