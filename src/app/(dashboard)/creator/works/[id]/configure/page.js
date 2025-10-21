@@ -27,13 +27,332 @@ export default function ConfigureLicensePage() {
   const [userSearchOpen, setUserSearchOpen] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const licenseTemplates = [
-    { id: 'personal', title: 'Personal Use', license_type: 'Personal', terms: 'Personal use only.' },
-    { id: 'commercial', title: 'Commercial Use', license_type: 'Commercial', terms: 'Commercial use allowed.' },
+    {
+      id: 'personal',
+      title: 'Personal Use License',
+      license_type: 'Personal',
+      description: 'Allows personal, non-commercial use of the creative work for individual projects and personal portfolios.',
+      price_idr: '50000',
+      usage_limit: '',
+      duration_days: '',
+      terms: `PERSONAL USE LICENSE AGREEMENT
+
+This Personal Use License ("License") is granted by the Creator to the Licensee for the use of the creative work ("Work").
+
+1. GRANT OF LICENSE
+The Creator grants the Licensee a non-exclusive, non-transferable license to use the Work for personal, non-commercial purposes only.
+
+2. PERMITTED USES
+- Personal projects and hobbies
+- Personal portfolio display
+- Social media posts for personal accounts
+- Educational purposes (non-commercial)
+- Personal gifts
+
+3. PROHIBITED USES
+- Commercial use of any kind
+- Resale or redistribution of the Work
+- Use in products for sale
+- Corporate or business use
+- Mass distribution
+- Incorporation into templates or products for sale
+
+4. OWNERSHIP
+The Creator retains all ownership rights, including copyright and intellectual property rights to the Work. This License does not transfer ownership.
+
+5. ATTRIBUTION
+Attribution to the Creator is appreciated but not required for personal use.
+
+6. WARRANTY DISCLAIMER
+THE WORK IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.
+
+7. TERMINATION
+This License is perpetual but may be terminated if terms are violated.
+
+By purchasing this license, you agree to these terms and conditions.`
+    },
+    {
+      id: 'commercial',
+      title: 'Standard Commercial License',
+      license_type: 'Commercial',
+      description: 'Allows commercial use in digital and print projects including websites, apps, marketing materials, and products.',
+      price_idr: '200000',
+      usage_limit: '',
+      duration_days: '365',
+      terms: `STANDARD COMMERCIAL LICENSE AGREEMENT
+
+This Commercial License ("License") is granted by the Creator to the Licensee for commercial use of the creative work ("Work").
+
+1. GRANT OF LICENSE
+The Creator grants the Licensee a non-exclusive, non-transferable license to use the Work for commercial purposes as outlined in this agreement.
+
+2. PERMITTED USES
+- Digital products (websites, applications, software)
+- Marketing and advertising materials
+- Social media marketing campaigns
+- Printed materials (brochures, posters, packaging)
+- Products for sale (merchandise, prints) with up to 10,000 units
+- Commercial presentations and publications
+- Client projects (as a designer/agency)
+
+3. PROHIBITED USES
+- Resale or redistribution of the original Work
+- Use in competing stock libraries or marketplaces
+- Incorporation into logos or trademarks
+- Use in defamatory, pornographic, or illegal content
+- Mass production exceeding 10,000 units without Extended License
+
+4. DURATION
+This License is valid for 365 days from the date of purchase. Renewal required for continued commercial use.
+
+5. ATTRIBUTION
+Attribution format: "Created by [Creator Name] via CreativeChain"
+Attribution required in final deliverables or credits section.
+
+6. OWNERSHIP
+The Creator retains all ownership rights. The Licensee receives usage rights only.
+
+7. WARRANTY
+The Creator warrants that they own the rights to grant this License.
+
+8. LIMITATION OF LIABILITY
+The Creator shall not be liable for any indirect, incidental, or consequential damages.
+
+9. TERMINATION
+License terminates upon expiration or violation of terms. Upon termination, Licensee must cease all use of the Work.
+
+By purchasing this license, you agree to these terms and conditions.`
+    },
+    {
+      id: 'extended-commercial',
+      title: 'Extended Commercial License',
+      license_type: 'Extended Commercial',
+      description: 'Unlimited commercial use including unlimited product sales, broadcast, and unlimited clients. Perpetual license.',
+      price_idr: '500000',
+      usage_limit: '',
+      duration_days: '',
+      terms: `EXTENDED COMMERCIAL LICENSE AGREEMENT
+
+This Extended Commercial License ("License") is granted by the Creator to the Licensee for unlimited commercial use of the creative work ("Work").
+
+1. GRANT OF LICENSE
+The Creator grants the Licensee a non-exclusive, non-transferable, perpetual license for unlimited commercial use of the Work.
+
+2. PERMITTED USES
+All uses permitted in Standard Commercial License, PLUS:
+- Unlimited product sales (no unit limit)
+- Broadcast use (TV, streaming, cinema)
+- Unlimited client projects
+- Use in templates or digital products for resale
+- Large-scale marketing campaigns
+- Corporate branding materials
+- Merchandise with unlimited production runs
+- NFT projects and blockchain applications
+- Use across multiple brands/companies
+
+3. PROHIBITED USES
+- Direct resale or redistribution as a standalone digital asset
+- Use in competing creative marketplaces or stock libraries
+- Claiming ownership or copyright of the Work
+- Use in defamatory, pornographic, or illegal content
+- Removal of blockchain verification or certificate references
+
+4. DURATION
+This License is perpetual and does not require renewal.
+
+5. ATTRIBUTION
+Attribution format: "Created by [Creator Name] via CreativeChain"
+Attribution required in professional/published work credits or descriptions.
+
+6. TRANSFERS
+This License may be transferred to clients as part of project deliverables.
+
+7. OWNERSHIP
+The Creator retains all ownership and intellectual property rights. The Licensee receives comprehensive usage rights as outlined.
+
+8. BLOCKCHAIN VERIFICATION
+This license is verified on the blockchain. The NFT certificate serves as proof of license ownership.
+
+9. WARRANTY
+The Creator warrants ownership and the right to grant this License.
+
+10. INDEMNIFICATION
+Creator agrees to indemnify Licensee against claims of copyright infringement for proper use under this License.
+
+11. LIMITATION OF LIABILITY
+Maximum liability limited to the license purchase price.
+
+12. GOVERNING LAW
+This agreement is governed by Indonesian law.
+
+By purchasing this license, you agree to these terms and conditions.`
+    },
+    {
+      id: 'editorial',
+      title: 'Editorial Use License',
+      license_type: 'Editorial',
+      description: 'For use in news, journalism, education, and commentary. Cannot be used for commercial advertising or endorsements.',
+      price_idr: '100000',
+      usage_limit: '50',
+      duration_days: '180',
+      terms: `EDITORIAL USE LICENSE AGREEMENT
+
+This Editorial License ("License") is granted by the Creator to the Licensee for editorial use of the creative work ("Work").
+
+1. GRANT OF LICENSE
+The Creator grants the Licensee a non-exclusive, non-transferable license to use the Work for editorial purposes only.
+
+2. PERMITTED USES
+- News reporting and journalism
+- Educational publications and materials
+- Documentary films and content
+- Blog posts and articles (non-commercial)
+- Academic research and publications
+- Commentary and criticism
+- Historical archives
+- Public interest reporting
+
+3. PROHIBITED USES
+- Commercial advertising or endorsements
+- Promotional materials
+- Product packaging
+- Marketing campaigns
+- Implied endorsement of products/services
+- Use suggesting affiliation with brands
+- Defamatory or misleading contexts
+
+4. USAGE LIMITATIONS
+- Maximum 50 uses within license period
+- Each publication, article, or project counts as one use
+- Usage tracking required by Licensee
+
+5. DURATION
+This License is valid for 180 days from purchase date.
+
+6. ATTRIBUTION
+Required format: "Photo/Image by [Creator Name]"
+Must include attribution in caption or credit line.
+
+7. MODIFICATIONS
+Minor cropping and color correction permitted. Significant alterations that change meaning are prohibited.
+
+8. CONTEXT REQUIREMENTS
+Work must be used in factual, newsworthy context. Must not imply endorsement or create false associations.
+
+9. OWNERSHIP
+Creator retains all rights. This License grants usage rights only.
+
+10. REPRESENTATION
+Licensee represents that use will be for legitimate editorial purposes only.
+
+11. TERMINATION
+License terminates upon expiration or violation. Continued use after expiration requires renewal.
+
+By purchasing this license, you agree to these terms and conditions.`
+    },
+    {
+      id: 'social-media',
+      title: 'Social Media License',
+      license_type: 'Social Media',
+      description: 'Optimized for social media content creators. Allows use in posts, stories, and videos on all major platforms.',
+      price_idr: '75000',
+      usage_limit: '100',
+      duration_days: '90',
+      terms: `SOCIAL MEDIA LICENSE AGREEMENT
+
+This Social Media License ("License") is granted by the Creator to the Licensee for use of the creative work ("Work") on social media platforms.
+
+1. GRANT OF LICENSE
+The Creator grants the Licensee a non-exclusive license to use the Work on social media platforms for content creation.
+
+2. PERMITTED PLATFORMS
+- Instagram, Facebook, Twitter/X, TikTok
+- YouTube, LinkedIn, Pinterest
+- Snapchat, Reddit, Discord
+- Other social media and content platforms
+
+3. PERMITTED USES
+- Social media posts and stories
+- Video content and reels
+- Thumbnails and cover images
+- Profile and banner images
+- Social media advertising (with up to $10,000 ad spend)
+- Content creator videos and streams
+- Podcast cover art and promotional materials
+
+4. USAGE LIMIT
+Maximum 100 posts/uses within license period.
+Each post, video, or piece of content counts as one use.
+
+5. DURATION
+Valid for 90 days from purchase. Unlimited duration for published content during valid period.
+
+6. MONETIZATION
+- YouTube monetization: Permitted
+- Sponsored posts: Permitted (with attribution)
+- Affiliate marketing: Permitted
+- Ad revenue: Permitted
+
+7. ATTRIBUTION
+Recommended format: "Design by [Creator Name] @CreativeChain"
+Tag or credit Creator when possible.
+
+8. MODIFICATIONS
+Filters, text overlays, and edits permitted to fit platform requirements.
+
+9. PROHIBITED USES
+- Reselling or redistributing the Work
+- Using in competing creative marketplaces
+- Claiming creation or ownership
+- Large-scale ad campaigns (>$10,000 spend requires Commercial License)
+
+10. PLATFORM RIGHTS
+You grant social media platforms their standard usage rights per their terms of service.
+
+11. TERMINATION
+License expires after 90 days or 100 uses, whichever comes first. Content published during valid period may remain live.
+
+By purchasing this license, you agree to these terms and conditions.`
+    }
   ];
 
   useEffect(() => {
+    const loadCurrentUser = async () => {
+      // Get current authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get user profile with wallet address
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, wallet_address')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setCurrentUser(profile);
+
+        // Only set default royalty split if this is a new license (not edit mode)
+        // and if royalty splits haven't been loaded yet
+        setForm((f) => {
+          if (f.royalty_splits.length === 1 && !f.royalty_splits[0].recipient_address) {
+            return {
+              ...f,
+              royalty_splits: [{
+                recipient_address: profile.wallet_address || '',
+                recipient_name: profile.username || profile.full_name || 'You',
+                split_percentage: '100'
+              }]
+            };
+          }
+          return f;
+        });
+      }
+    };
+
     const loadWork = async () => {
       if (!workId) return setPrefetching(false);
       setPrefetching(true);
@@ -96,8 +415,8 @@ export default function ConfigureLicensePage() {
       }
     };
 
+    loadCurrentUser();
     loadExistingLicense();
-
     loadWork();
   }, [workId]);
 
@@ -219,36 +538,85 @@ export default function ConfigureLicensePage() {
       {prefetching && <p className="p-4">Loading work data...</p>}
       {error && <p className="text-red-600">{error}</p>}
 
-      <div className="mb-4">
-        <button type="button" onClick={() => setTemplateOpen(true)} className="text-sm text-blue-600 hover:underline">Choose template</button>
+      <div className="mb-6">
+        <button
+          type="button"
+          onClick={() => setTemplateOpen(true)}
+          className="px-4 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium text-sm border border-blue-200"
+        >
+          📋 Choose License Template
+        </button>
         {templateOpen && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-            <div className="bg-white p-6 rounded max-w-md w-full">
-              <h3 className="font-bold mb-3">Select License Template</h3>
-              <div className="space-y-2">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold mb-4">Select License Template</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Choose a pre-configured license template to quickly set up your licensing terms. All fields can be customized after selection.
+              </p>
+              <div className="space-y-3">
                 {licenseTemplates.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between border p-2 rounded">
-                    <div>
-                      <div className="font-semibold">{t.title}</div>
-                      <div className="text-sm text-gray-600">{t.terms}</div>
-                    </div>
-                    <div>
+                  <div key={t.id} className="border border-gray-200 p-4 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-semibold text-lg mb-1">{t.title}</div>
+                        <div className="text-sm text-gray-600 mb-2">{t.description}</div>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                            Price: Rp {Number(t.price_idr).toLocaleString('id-ID')}
+                          </span>
+                          {t.duration_days && (
+                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                              Duration: {t.duration_days} days
+                            </span>
+                          )}
+                          {!t.duration_days && (
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                              Perpetual
+                            </span>
+                          )}
+                          {t.usage_limit && (
+                            <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                              Limit: {t.usage_limit} uses
+                            </span>
+                          )}
+                          {!t.usage_limit && (
+                            <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+                              Unlimited uses
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
-                          setForm((f) => ({ ...f, license_type: t.license_type, terms: t.terms }));
+                          setForm((f) => ({
+                            ...f,
+                            license_type: t.license_type,
+                            title: t.title,
+                            description: t.description,
+                            price_idr: t.price_idr,
+                            usage_limit: t.usage_limit,
+                            duration_days: t.duration_days,
+                            terms: t.terms
+                          }));
                           setTemplateOpen(false);
                         }}
-                        className="text-blue-600"
+                        className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
                       >
-                        Use
+                        Use Template
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 text-right">
-                <button type="button" onClick={() => setTemplateOpen(false)} className="text-sm text-gray-600">Close</button>
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setTemplateOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
