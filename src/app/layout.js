@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
         className={`${outfit.variable} ${inter.variable} antialiased bg-base`}
       >
         <Navbar />
-        <main className="pt-16">
+        <main className="pt-6">
           <ThirdwebProvider>
             {children}
           </ThirdwebProvider>

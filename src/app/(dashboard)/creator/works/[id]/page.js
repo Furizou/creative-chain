@@ -195,7 +195,7 @@ export default function WorkDetailsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
             <div className="md:flex md:gap-8">
@@ -220,7 +220,7 @@ export default function WorkDetailsPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Work</h1>
@@ -244,13 +244,13 @@ export default function WorkDetailsPage() {
   const isCreator = user && work?.creator_id === user.id;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Two-Column Layout */}
         <div className="md:flex md:gap-8 mb-12">
           
           {/* Left Column - Sticky Image/File Display */}
-          <div className="md:w-2/5 md:sticky md:top-8 md:self-start">
+          <div className="md:w-2/5 md:sticky md:top-22 md:self-start">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               {work.file_url ? (
                 isImage ? (
