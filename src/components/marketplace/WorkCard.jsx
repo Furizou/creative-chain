@@ -29,13 +29,21 @@ export default function WorkCard({ work }) {
         
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-sm font-medium">
-                {work.creator?.name?.[0] || 'A'}
-              </span>
+            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+              {work.creator?.avatar_url ? (
+                <img
+                  src={work.creator.avatar_url}
+                  alt={work.creator.full_name || 'Creator'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-medium">
+                  {work.creator?.full_name?.[0] || 'A'}
+                </span>
+              )}
             </div>
             <span className="ml-2 text-sm text-gray-600">
-              {work.creator?.name || 'Anonymous'}
+              {work.creator?.full_name || 'Anonymous'}
             </span>
           </div>
           {work.category && (

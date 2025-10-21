@@ -26,7 +26,14 @@ export async function GET(request) {
 
     let query = supabase
       .from('creative_works')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        creator:profiles!creative_works_creator_id_fkey (
+          id,
+          full_name,
+          avatar_url
+        )
+      `, { count: 'exact' })
 
     // Apply filters
     if (search) {
