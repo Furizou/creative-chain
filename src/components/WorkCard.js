@@ -2,13 +2,26 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FileText } from 'lucide-react';
+import { FileText, Music, Palette, Camera } from 'lucide-react';
+import { isImageUrl, getCategoryIcon } from '@/lib/utils/fileUtils';
 
 export default function WorkCard({ work }) {
   const router = useRouter();
 
   // Support both old format (coverImage) and new format (thumbnail_url/file_url)
   const imageUrl = work.coverImage || work.thumbnail_url || work.file_url;
+  const isImage = isImageUrl(imageUrl);
+  const iconName = getCategoryIcon(work.category);
+
+  // Map icon names to components
+  const iconComponents = {
+    Music,
+    Palette,
+    Camera,
+    FileText
+  };
+
+  const IconComponent = iconComponents[iconName] || FileText;
 
   const handleClick = () => {
     router.push(`/creator/works/${work.id}`);
@@ -20,14 +33,14 @@ export default function WorkCard({ work }) {
       onClick={handleClick}
     >
       <div className="relative w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
-        {imageUrl ? (
+        {imageUrl && isImage ? (
           <img
             src={imageUrl}
             alt={work.title}
             className="w-full h-full object-cover"
           />
         ) : (
-          <FileText className="w-16 h-16 text-gray-400" />
+          <IconComponent className="w-16 h-16 text-gray-400" />
         )}
       </div>
       <div className="p-4">
