@@ -1,22 +1,25 @@
 'use client';
 
-import { Music, Shield, MoreVertical } from 'lucide-react';
+import { FileText, Shield, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 
 export default function WorkCard({ work, onRefresh }) {
+  // Use thumbnail_url if available, otherwise fallback to file_url
+  const imageUrl = work.thumbnail_url || work.file_url;
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden group">
       {/* Thumbnail */}
       <Link href={`/creator/works/${work.id}`}>
         <div className="w-full h-48 bg-gray-50 flex items-center justify-center relative overflow-hidden">
-          {work.thumbnail_url ? (
-            <img 
-              src={work.thumbnail_url} 
+          {imageUrl ? (
+            <img
+              src={imageUrl}
               alt={work.title}
               className="w-full h-full object-cover"
             />
           ) : (
-            <Music className="w-16 h-16 text-gray-400 group-hover:scale-110 transition-transform" />
+            <FileText className="w-16 h-16 text-gray-400 group-hover:scale-110 transition-transform" />
           )}
           {work.copyright_certificate && (
             <div className="absolute top-2 right-2 bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center space-x-1 text-xs font-medium">
