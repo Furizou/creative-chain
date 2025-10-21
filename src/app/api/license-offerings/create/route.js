@@ -11,17 +11,24 @@ export async function POST(req) {
       title,
       description,
       price_idr,
-      price_bidr,
       usage_limit,
       duration_days,
       terms,
-  royalty_splits,
+      royalty_splits,
     } = body;
 
     // simple validation
     if (!work_id || !license_type || !title) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields: work_id, license_type, and title are required' }, { status: 400 });
     }
+
+    // Validate price_idr (required field in database)
+    if (!price_idr || Number(price_idr) < 0) {
+      return NextResponse.json({ error: 'Valid price_idr is required and must be >= 0' }, { status: 400 });
+    }
+
+    // Auto-calculate price_bidr from price_idr (1:1 conversion)
+    const calculatedPriceBidr = Number(price_idr);
 
     const now = new Date().toISOString();
 
@@ -48,8 +55,8 @@ export async function POST(req) {
           license_type,
           title,
           description: description ?? null,
-          price_idr: price_idr ?? null,
-          price_bidr: price_bidr ?? null,
+          price_idr: Number(price_idr),
+          price_bidr: calculatedPriceBidr,
           usage_limit: usage_limit ?? null,
           duration_days: duration_days ?? null,
           terms: terms ?? null,
@@ -69,8 +76,8 @@ export async function POST(req) {
           license_type,
           title,
           description: description ?? null,
-          price_idr: price_idr ?? null,
-          price_bidr: price_bidr ?? null,
+          price_idr: Number(price_idr),
+          price_bidr: calculatedPriceBidr,
           usage_limit: usage_limit ?? null,
           duration_days: duration_days ?? null,
           terms: terms ?? null,
