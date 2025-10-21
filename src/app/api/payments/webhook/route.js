@@ -138,41 +138,135 @@ export async function POST(request) {
 
     console.log(`Order ${orderId} status updated to 'paid' successfully`);
 
-    // Create license record for the completed order
-    const licenseData = {
-      work_id: order.license_offerings.work_id,
-      buyer_id: order.buyer_id,
-      license_type: order.license_offerings.license_type,
-      price_usdt: order.amount_idr, // TODO: Implement real currency conversion from IDR to USDT
-      transaction_hash: order.id, // Using order UUID as transaction hash for now
-      order_id: order.id,
-      license_offering_id: order.license_offering_id
-    };
+    // ==========================================
+    // STEP 2: MINT LICENSE NFT
+    // ==========================================
 
-    const { data: newLicense, error: licenseError } = await supabaseAdmin
-      .from('licenses')
-      .insert(licenseData)
-      .select()
+    // Fetch additional data needed for minting
+    const { data: creativeWork, error: workError } = await supabaseAdmin
+      .from('creative_works')
+      .select('title, creator_id, profiles(full_name)')
+      .eq('id', order.license_offerings.work_id)
       .single();
 
-    if (licenseError) {
-      console.error('Error creating license:', licenseError);
-      // Note: Order is already marked as paid, so we log the error but don't fail the webhook
-      console.log(`Order ${orderId} was marked as paid but license creation failed`);
-    } else {
-      console.log(`License created successfully for order ${orderId}:`, newLicense.id);
-      // TODO: Initiate blockchain minting for the new license ID
+    if (workError || !creativeWork) {
+      console.error('Error fetching creative work:', workError);
+      return NextResponse.json(
+        {
+          error: 'Failed to fetch creative work details',
+          success: false
+        },
+        { status: 500 }
+      );
     }
 
-    // Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        orderId: orderId,
-        message: 'Order status updated to paid successfully'
-      },
-      { status: 200 }
-    );
+    // Calculate expiry date based on duration_days
+    let expiryDate = null;
+    if (order.license_offerings.duration_days) {
+      const purchaseDate = new Date();
+      expiryDate = new Date(purchaseDate.getTime() + order.license_offerings.duration_days * 24 * 60 * 60 * 1000);
+    }
+
+    // Prepare minting request payload
+    const mintRequest = {
+      buyerUserId: order.buyer_id,
+      workId: order.license_offerings.work_id,
+      licenseOfferingId: order.license_offering_id,
+      orderId: order.id,
+      licenseType: order.license_offerings.license_type,
+      workTitle: creativeWork.title,
+      creatorName: creativeWork.profiles?.full_name || 'Unknown Creator',
+      terms: order.license_offerings.terms || `License for ${order.license_offerings.license_type}`,
+      expiryDate: expiryDate ? expiryDate.toISOString() : null,
+      usageLimit: order.license_offerings.usage_limit,
+      priceBidr: order.amount_bidr,
+      transactionHash: order.id // Using order UUID as payment transaction reference
+    };
+
+    console.log('Initiating license minting for order:', orderId);
+    console.log('Mint request payload:', mintRequest);
+
+    // Call the internal minting API
+    try {
+      const mintResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/blockchain/mint-license`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mintRequest)
+      });
+
+      const mintResult = await mintResponse.json();
+
+      if (!mintResponse.ok || !mintResult.success) {
+        console.error('License minting failed:', mintResult);
+        // Log error but don't fail the webhook - order is already paid
+        console.log(`Order ${orderId} was marked as paid but license minting failed: ${mintResult.message || mintResult.error}`);
+
+        return NextResponse.json(
+          {
+            success: true,
+            orderId: orderId,
+            message: 'Order marked as paid but license minting failed',
+            warning: mintResult.message || mintResult.error,
+            mintError: mintResult
+          },
+          { status: 200 }
+        );
+      }
+
+      console.log(`License minted successfully for order ${orderId}:`, {
+        licenseId: mintResult.licenseId,
+        tokenId: mintResult.tokenId,
+        transactionHash: mintResult.transactionHash
+      });
+
+      // ==========================================
+      // STEP 3: UPDATE ORDER STATUS TO COMPLETED
+      // ==========================================
+
+      const { error: completeError } = await supabaseAdmin
+        .from('orders')
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+
+      if (completeError) {
+        console.error('Error updating order to completed:', completeError);
+        // Don't fail - minting succeeded
+      } else {
+        console.log(`Order ${orderId} status updated to 'completed'`);
+      }
+
+      // Return success with minting details
+      return NextResponse.json(
+        {
+          success: true,
+          orderId: orderId,
+          licenseId: mintResult.licenseId,
+          tokenId: mintResult.tokenId,
+          transactionHash: mintResult.transactionHash,
+          polygonscanUrl: mintResult.polygonscanUrl,
+          message: 'Payment confirmed and license minted successfully'
+        },
+        { status: 200 }
+      );
+
+    } catch (mintError) {
+      console.error('Unexpected error during license minting:', mintError);
+      // Order is already paid, so return success with warning
+      return NextResponse.json(
+        {
+          success: true,
+          orderId: orderId,
+          message: 'Order marked as paid but license minting encountered an error',
+          warning: mintError.message
+        },
+        { status: 200 }
+      );
+    }
 
   } catch (error) {
     console.error('Error processing payment webhook:', error);

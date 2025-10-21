@@ -366,8 +366,8 @@ export function createCertificateRecord({
  * @returns {boolean} True if valid license type
  */
 export function isValidLicenseType(licenseType) {
-  const validTypes = ['personal', 'commercial_event', 'broadcast_1year', 'exclusive'];
-  return validTypes.includes(licenseType?.toLowerCase());
+  // Accept any non-empty string as a valid license type
+  return typeof licenseType === 'string' && licenseType.trim().length > 0;
 }
 
 /**

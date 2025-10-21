@@ -71,7 +71,7 @@ export async function POST(request) {
         {
           success: false,
           error: 'INVALID_LICENSE_TYPE',
-          message: 'License type must be one of: personal, commercial_event, broadcast_1year, exclusive'
+          message: 'License type must be a non-empty string'
         },
         { status: 400 }
       );

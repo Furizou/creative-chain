@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 
@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 const formatPrice = (price) => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
   if (isNaN(numPrice)) return 'N/A';
-  
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -21,26 +21,30 @@ const formatPrice = (price) => {
 };
 
 /**
- * Checkout page for confirming license purchase
- * @param {Object} props - Component props
- * @param {Object} props.params - Dynamic route parameters
- * @returns {JSX.Element} Checkout page component
+ * Checkout page content component (wrapped in Suspense boundary)
  */
-export default function CheckoutPage({ params }) {
+function CheckoutPageContent({ params }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // State management
   const [workId, setWorkId] = useState(null);
   const [licenseOfferingId, setLicenseOfferingId] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
   const [workData, setWorkData] = useState(null);
   const [licenseOffering, setLicenseOffering] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Prevent hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Extract IDs from URL parameters
   useEffect(() => {
+    if (!isMounted) return;
     const getParams = async () => {
       const resolvedParams = await params;
       const workIdFromParams = resolvedParams.id;
@@ -57,7 +61,7 @@ export default function CheckoutPage({ params }) {
     };
 
     getParams();
-  }, [params, searchParams]);
+  }, [params, searchParams, isMounted]);
 
   // Fetch work and license offering data
   useEffect(() => {
@@ -148,16 +152,6 @@ export default function CheckoutPage({ params }) {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  // Format price for display
-  const formatPrice = (price) => {
-    if (typeof price !== 'number') return 'N/A';
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(price);
   };
 
   // Loading state
@@ -323,5 +317,37 @@ export default function CheckoutPage({ params }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Checkout page wrapper with Suspense boundary
+ * @param {Object} props - Component props
+ * @param {Object} props.params - Dynamic route parameters
+ * @returns {JSX.Element} Checkout page component
+ */
+export default function CheckoutPage({ params }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 py-8">
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-3/4 mb-6"></div>
+                <div className="space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                </div>
+                <div className="mt-8 h-12 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <CheckoutPageContent params={params} />
+    </Suspense>
   );
 }
