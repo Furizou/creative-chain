@@ -3,82 +3,86 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET(req) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   
   try {
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'No user found' },
-        { status: 401 }
-      );
-    }
-
-    // Get creator profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    // Get authenticated user from session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    if (profileError) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
+    if (sessionError || !session) {
+      console.error('Auth error:', sessionError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }), 
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
-    // Get total works
+    const user = session.user;
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'No user found' }), 
+        { 
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // Note: profile might not exist, that's okay - we can still get stats from works
+    // Get total works for creator
     const { data: works, error: worksError } = await supabase
       .from('creative_works')
       .select('id')
-      .eq('creator_id', profile.id);
+      .eq('creator_id', user.id);
     
     if (worksError) {
-      return NextResponse.json(
-        { error: 'Error fetching works' },
-        { status: 500 }
+      console.error('Error fetching works:', worksError);
+      return new Response(
+        JSON.stringify({ error: 'Error fetching works' }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
       );
     }
 
-    // Get total revenue from completed licenses
-    const { data: revenue, error: revenueError } = await supabase
-      .from('licenses')
+    // Get orders for creator's works
+    const { data: orders, error: ordersError } = await supabase
+      .from('orders')
       .select(`
-        price_bidr,
-        work:work_id (
-          creator_id
+        id,
+        amount_bidr,
+        status,
+        license_offering:license_offering_id (
+          work_id
         )
-      `)
-      .eq('work.creator_id', profile.id);
+      `);
+    
+    if (ordersError) {
+      console.error('Error fetching orders:', ordersError);
+      return new Response(
+        JSON.stringify({ error: 'Error fetching orders' }), 
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
-    if (revenueError) throw revenueError;
+    // Filter to only creator's works
+    const workIds = new Set(works.map(w => w.id));
+    const creatorOrders = orders.filter(o => 
+      o.license_offering && workIds.has(o.license_offering.work_id)
+    );
 
-    // Calculate total revenue
-    const totalRevenue = revenue.reduce((sum, license) => sum + Number(license.price_bidr), 0);
-
-    // Get total sales (completed licenses)
-    const totalSales = revenue.length;
-
-    // Get available balance from pending royalty distributions
-    const { data: distributions, error: distributionsError } = await supabase
-      .from('royalty_distributions')
-      .select('amount_idr')
-      .eq('recipient_id', profile.id)
-      .eq('status', 'pending');
-
-    if (distributionsError) throw distributionsError;
-
-    const availableBalance = distributions.reduce((sum, dist) => sum + Number(dist.amount_idr), 0);
+    // Calculate totals
+    const totalRevenue = creatorOrders.reduce((sum, order) => sum + Number(order.amount_bidr || 0), 0);
+    const totalSales = creatorOrders.length;
+    const availableBalance = 0; // Placeholder
 
     return NextResponse.json({
       totalWorks: works.length,

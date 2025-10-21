@@ -1,70 +1,47 @@
-/**
- * @fileoverview Creative Works Upload API Route
- * Handles POST requests to upload creative works with file storage and database insertion
- */
-
-import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 
-/**
- * POST /api/creative-works/upload
- * Uploads a creative work file and saves metadata to database
- * 
- * @param {NextRequest} request - The incoming request with multipart/form-data
- * @returns {NextResponse} JSON response with upload result
- */
 export async function POST(request) {
   try {
-    // 1. Secure the Route: Get authenticated user session with development fallback
-    const DEMO_CREATOR_ID = 'ec452ac9-87d2-4df9-8f2d-c8efae09d5ab';
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    // 1. Get authenticated session using auth-helpers
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
-    // First, always try to get a real session
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    let userId;
+    if (sessionError) {
+      console.error('Session retrieval error:', sessionError);
+      return NextResponse.json(
+        { error: 'Session error', success: false },
+        { status: 401 }
+      );
+    }
 
-    if (session && session.user) {
-      // 1. If a real session exists, use it.
-      userId = session.user.id;
-      console.log(`Authenticated with real user session: ${userId}`);
-    } else if (process.env.NODE_ENV === 'development') {
-      // 2. If no session, but we are in development, use the mock ID as a fallback.
-      userId = DEMO_CREATOR_ID;
-      console.warn('⚠️ NO REAL SESSION: Using mock creator ID for upload as a fallback.');
-    } else {
-      // 3. If no session and we are in production, it's an error.
+    if (!session || !session.user) {
+      console.error('Unauthorized upload attempt: No authenticated session');
       return NextResponse.json(
         { error: 'Unauthorized: Authentication required', success: false },
         { status: 401 }
       );
     }
 
-    // Apply Principle of Least Privilege: Choose appropriate client based on authentication method
-    let operationClient;
+    const userId = session.user.id;
+    console.log(`Authenticated upload from user: ${userId}`);
 
-    if (session && session.user) {
-      // Real user session: Use standard authenticated client (follows RLS)
-      operationClient = supabase;
-      console.log('Using authenticated user client (RLS enforced)');
-    } else {
-      // Development fallback with mock user: Use service role client (bypasses RLS)
-      operationClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
+    // 2. Create admin client for database operations
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
         }
-      );
-      console.log('Using service role client for development fallback (RLS bypassed)');
-    }
+      }
+    );
 
     // 2. Parse Form Data: Read multipart/form-data
     const formData = await request.formData();
@@ -99,14 +76,21 @@ export async function POST(request) {
     // 3. Upload to Supabase Storage
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop();
-    const fileName = `${timestamp}-${file.name}`;
+    
+    // Sanitize filename - remove special characters
+    const sanitizedName = file.name
+      .replace(/[^\w.-]/g, '_')
+      .replace(/\s+/g, '_')
+      .toLowerCase();
+    
+    const fileName = `${timestamp}-${sanitizedName}`;
     const filePath = `public/${userId}/${fileName}`;
 
     // Get file buffer for upload and hash generation
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
     // Upload file to creative-works bucket
-    const { data: uploadData, error: uploadError } = await operationClient.storage
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from('creative-works')
       .upload(filePath, fileBuffer, {
         contentType: file.type,
@@ -125,7 +109,7 @@ export async function POST(request) {
     }
 
     // Get public URL of the uploaded file
-    const { data: urlData } = operationClient.storage
+    const { data: urlData } = supabaseAdmin.storage
       .from('creative-works')
       .getPublicUrl(filePath);
 
@@ -135,7 +119,7 @@ export async function POST(request) {
     const fileHash = createHash('sha256').update(fileBuffer).digest('hex');
 
     // 5. Save to Database: Insert record into creative_works table
-    const { data: workData, error: insertError } = await operationClient
+    const { data: workData, error: insertError } = await supabaseAdmin
       .from('creative_works')
       .insert({
         creator_id: userId,
@@ -154,7 +138,7 @@ export async function POST(request) {
       console.error('Database insert error:', insertError);
       
       // Clean up uploaded file if database insert fails
-      await operationClient.storage
+      await supabaseAdmin.storage
         .from('creative-works')
         .remove([filePath]);
 
