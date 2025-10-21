@@ -151,13 +151,13 @@ export default function LoginPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 text-center">Welcome Back</h1>
-        <p className="text-gray-600 text-center mt-2">Sign in to your CreativeChain account</p>
+        <h1 className="text-2xl font-black text-structural text-center">Welcome Back</h1>
+        <p className="text-structural/70 text-center mt-2">Sign in to your CreativeChain account</p>
       </div>
 
       {/* URL Message */}
       {message && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg">
+        <div className="mb-4 bg-primary/10 border border-primary/20 text-structural px-4 py-3 rounded-lg">
           {message}
         </div>
       )}
@@ -165,7 +165,7 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="email" className="block text-sm font-semibold text-structural mb-1">
             Email Address
           </label>
           <input
@@ -174,17 +174,17 @@ export default function LoginPage() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+              errors.email ? 'border-warning bg-warning/5' : 'border-gray-300 bg-white'
             }`}
             placeholder="Enter your email"
           />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-warning text-sm mt-1">{errors.email}</p>}
         </div>
 
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="password" className="block text-sm font-semibold text-structural mb-1">
             Password
           </label>
           <input
@@ -193,26 +193,26 @@ export default function LoginPage() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+              errors.password ? 'border-warning bg-warning/5' : 'border-gray-300 bg-white'
             }`}
             placeholder="Enter your password"
           />
-          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+          {errors.password && <p className="text-warning text-sm mt-1">{errors.password}</p>}
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-primary text-structural py-3 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isLoading ? 'Signing In...' : 'Sign In'}
         </button>
 
         {/* Error Messages */}
         {errors.submit && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-warning/10 border border-warning/20 text-warning px-4 py-3 rounded-lg">
             {errors.submit}
           </div>
         )}
@@ -220,19 +220,19 @@ export default function LoginPage() {
 
       {/* Demo Accounts */}
       <div className="mt-6 pt-4 border-t border-gray-200">
-        <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">Demo Accounts</h3>
+        <h3 className="text-sm font-semibold text-structural mb-3 text-center">Demo Accounts</h3>
         <div className="space-y-2">
           <button
             onClick={() => handleDemoLogin('creator')}
             disabled={isLoading}
-            className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 text-sm transition-colors"
+            className="w-full bg-secondary text-white py-2.5 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-secondary/50 disabled:opacity-50 text-sm transition-all"
           >
             Login as Demo Creator
           </button>
           <button
             onClick={() => handleDemoLogin('buyer')}
             disabled={isLoading}
-            className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 text-sm transition-colors"
+            className="w-full bg-structural text-white py-2.5 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-structural/50 disabled:opacity-50 text-sm transition-all"
           >
             Login as Demo Buyer
           </button>
@@ -241,16 +241,16 @@ export default function LoginPage() {
 
       {/* Forgot Password */}
       <div className="mt-4 text-center">
-        <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700">
+        <Link href="/forgot-password" className="text-sm text-secondary hover:text-secondary/80 font-medium transition-colors">
           Forgot your password?
         </Link>
       </div>
 
       {/* Signup Link */}
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-structural/70">
           Don't have an account?{' '}
-          <Link href="/signup" className="text-indigo-600 hover:text-indigo-700 font-medium">
+          <Link href="/signup" className="text-primary hover:text-primary/80 font-semibold transition-colors">
             Create one
           </Link>
         </p>
