@@ -61,7 +61,7 @@ export default function CreatorDashboard() {
 
   const fetchRecentWorks = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
       const { data: works, error } = await supabase
@@ -72,9 +72,11 @@ export default function CreatorDashboard() {
           category,
           file_url,
           created_at,
-          licenses (
+          licenses!licenses_work_id_fkey (
             id,
-            price_usdt
+            orders!licenses_order_id_fkey (
+              amount_idr
+            )
           )
         `)
         .eq('creator_id', session.user.id)
@@ -83,11 +85,14 @@ export default function CreatorDashboard() {
 
       if (error) throw error;
 
-      const worksWithStats = works.map(work => ({
+      const worksWithStats = works?.map(work => ({
         ...work,
         license_count: work.licenses?.length || 0,
-        total_revenue: work.licenses?.reduce((sum, license) => sum + Number(license.price_usdt), 0) || 0
-      }));
+        total_revenue: work.licenses?.reduce((sum, license) => {
+          const orderAmount = license.orders?.amount_idr || 0;
+          return sum + Number(orderAmount);
+        }, 0) || 0
+      })) || [];
 
       setRecentWorks(worksWithStats);
     } catch (error) {
@@ -216,8 +221,16 @@ export default function CreatorDashboard() {
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-base rounded-lg flex items-center justify-center">
-                    <Music className="w-8 h-8 text-gray-400" />
+                  <div className="w-16 h-16 bg-base rounded-lg flex items-center justify-center overflow-hidden">
+                    {work.file_url ? (
+                      <img
+                        src={work.file_url}
+                        alt={work.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <FileText className="w-8 h-8 text-gray-400" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-bold text-structural">{work.title}</h3>
@@ -226,9 +239,6 @@ export default function CreatorDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-structural">{work.license_count || 0} Licenses</p>
-                  <p className="text-sm text-gray-600">
-                    Rp {(work.total_revenue || 0).toLocaleString('id-ID')}
-                  </p>
                 </div>
               </Link>
             ))}
