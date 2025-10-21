@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import WorkCard from '@/components/marketplace/WorkCard'
+import WorkCard from '@/components/marketplace/WorkCard.jsx'
 import WorkCardSkeleton from '@/components/marketplace/WorkCardSkeleton'
-import SearchBar from '@/components/marketplace/SearchBar'
-import CategoryFilter from '@/components/marketplace/CategoryFilter'
-import SortDropdown from '@/components/marketplace/SortDropdown'
+import SearchBar from '@/components/marketplace/SearchBar.jsx'
+import CategoryFilter from '@/components/marketplace/CategoryFilter.jsx'
+import SortDropdown from '@/components/marketplace/SortDropdown.jsx'
 import PaginationControls from '@/components/marketplace/PaginationControls'
 import { Search, TrendingUp, Users, ShoppingBag } from 'lucide-react'
 
@@ -47,15 +47,24 @@ export default function MarketplacePage() {
     setLoadingStats(true);
     try {
       const response = await fetch('/api/marketplace/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
       const data = await response.json();
-      setStats(data || {
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch stats');
+      }
+
+      setStats({
+        totalWorks: data.totalWorks || 0,
+        activeCreators: data.activeCreators || 0,
+        totalTransactions: data.totalTransactions || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      setStats({
         totalWorks: 0,
         activeCreators: 0,
         totalTransactions: 0
       });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     } finally {
       setLoadingStats(false);
     }
@@ -94,17 +103,19 @@ export default function MarketplacePage() {
       params.append('page', filters.page.toString());
 
       const response = await fetch(`/api/creative-works?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch works');
-      
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch works');
+      }
       
       startTransition(() => {
         setWorks(data?.works || []);
         setPagination({
-          total: data?.count || 0,
-          pages: Math.ceil((data?.count || 0) / 12),
-          hasNext: (data?.works?.length || 0) === 12,
-          hasPrev: filters.page > 1
+          total: data?.total || 0,
+          pages: data?.total_pages || 0,
+          hasNext: data?.has_next || false,
+          hasPrev: data?.has_prev || false
         });
       });
     } catch (error) {

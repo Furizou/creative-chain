@@ -1,9 +1,22 @@
-'use server'
-
-import { supabase } from '@/lib/supabase/client'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET(request) {
   try {
+    const cookieStore = cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const category = searchParams.get('category')
@@ -44,7 +57,15 @@ export async function GET(request) {
 
     const { data: works, count, error } = await query
 
-    if (error) throw error
+    if (error) {
+      console.error('Database error:', error)
+      return new Response(JSON.stringify({ error: 'Failed to fetch works' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    }
 
     const totalPages = Math.ceil((count || 0) / limit)
 

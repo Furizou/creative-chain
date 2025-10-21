@@ -2,7 +2,7 @@
 
 import { ChevronDown } from 'lucide-react';
 
-export default function CategoryFilter({ categories, selectedCategory, onCategoryChange }) {
+const CategoryFilter = ({ categories = [], selectedCategory = '', onCategoryChange }) => {
   return (
     <div className="relative">
       <select
@@ -24,4 +24,6 @@ export default function CategoryFilter({ categories, selectedCategory, onCategor
       </div>
     </div>
   );
-}
+};
+
+export default CategoryFilter;
