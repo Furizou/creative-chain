@@ -27,13 +27,35 @@ export default function CreatorDashboard() {
 
   const fetchCreatorStats = async () => {
     try {
-      const response = await fetch('/api/analytics/creator-stats')
-      const data = await response.json()
-      setStats(data)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No active session');
+        return;
+      }
+
+      const response = await fetch('/api/analytics/creator-stats', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch stats');
+      }
+      
+      setStats(data);
     } catch (error) {
-      console.error('Error fetching stats:', error)
+      console.error('Error fetching stats:', error);
+      setStats({
+        totalWorks: 0,
+        totalRevenue: 0,
+        totalSales: 0,
+        availableBalance: 0
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -179,7 +201,7 @@ export default function CreatorDashboard() {
             <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">No works yet. Upload your first creative work!</p>
             <Link 
-              href="/creator/upload"
+              href="/creator/works/new"
               className="bg-primary text-structural px-6 py-2 rounded-lg font-semibold hover:opacity-80 inline-block"
             >
               Upload Now
