@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function Navbar() {
+/**
+ * OLD NAVBAR - WITH SCROLL BEHAVIOR
+ * This is the original navbar that changes to a compact floating version when scrolled.
+ * Kept for reference but not currently in use.
+ */
+export default function NavbarOld() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const { user, profile, loading, signOut, isAuthenticated } = useAuth();
-
-  // Prevent hydration errors by only rendering auth-dependent content after mount
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,10 +30,9 @@ export default function Navbar() {
   };
 
   const AuthButtons = ({ compact = false }) => {
-    // Show loading skeleton during SSR and initial client load
-    if (!isMounted || loading) {
+    if (loading) {
       return (
-        <div className="px-4 py-2 bg-gray-600 rounded-lg animate-pulse">
+        <div className={`${compact ? 'px-4 py-1.5' : 'px-4 py-2'} bg-gray-600 rounded-lg animate-pulse`}>
           <div className="w-16 h-4 bg-gray-500 rounded"></div>
         </div>
       );
@@ -44,7 +43,7 @@ export default function Navbar() {
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center space-x-3 hover:text-primary transition-colors group"
+            className={`flex items-center space-x-3 ${compact ? 'text-sm' : ''} hover:text-primary transition-colors group`}
           >
             <div className="relative">
               <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
@@ -151,14 +150,14 @@ export default function Navbar() {
     }
 
     return (
-      <div className="flex items-center space-x-4">
+      <div className={`flex items-center ${compact ? 'space-x-2' : 'space-x-4'}`}>
         <Link href="/login">
-          <button className="text-white hover:text-primary transition-colors font-semibold">
+          <button className={`text-white hover:text-primary transition-colors font-semibold ${compact ? 'text-sm' : ''}`}>
             Login
           </button>
         </Link>
         <Link href="/signup">
-          <button className="bg-primary text-structural px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+          <button className={`bg-primary text-structural ${compact ? 'px-4 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-semibold hover:opacity-90 transition-opacity`}>
             Get Started
           </button>
         </Link>
@@ -168,8 +167,8 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Sticky Navbar */}
-      <nav className="sticky top-0 z-50 bg-structural text-white shadow-lg">
+      {/* Original Navbar */}
+      <nav className="bg-structural text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -182,8 +181,8 @@ export default function Navbar() {
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              {!isMounted || !isAuthenticated ? (
-                // Guest navigation (also shown during SSR to prevent hydration errors)
+              {!isAuthenticated ? (
+                // Guest navigation
                 <>
                   <Link href="/" className="hover:text-primary transition-colors font-body">
                     Home
@@ -194,12 +193,9 @@ export default function Navbar() {
                   <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
                     Marketplace
                   </Link>
-                  <Link href="/verify" className="hover:text-primary transition-colors font-body">
-                    Verify
-                  </Link>
                 </>
               ) : (
-                // Logged in user navigation (only shown after mount)
+                // Logged in user navigation
                 <>
                   <Link href="/creator" className="hover:text-primary transition-colors font-body">
                     Dashboard
@@ -212,9 +208,6 @@ export default function Navbar() {
                   </Link>
                   <Link href="/creator/analytics" className="hover:text-primary transition-colors font-body">
                     Analytics
-                  </Link>
-                  <Link href="/verify" className="hover:text-primary transition-colors font-body">
-                    Verify
                   </Link>
                 </>
               )}
@@ -240,8 +233,8 @@ export default function Navbar() {
           {showMobileMenu && (
             <div className="md:hidden bg-structural border-t border-gray-700">
               <div className="px-2 pt-2 pb-3 space-y-1">
-                {!isMounted || !isAuthenticated ? (
-                  // Guest mobile menu (also shown during SSR to prevent hydration errors)
+                {!isAuthenticated ? (
+                  // Guest mobile menu
                   <>
                     <Link href="/" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                       Home
@@ -251,9 +244,6 @@ export default function Navbar() {
                     </Link>
                     <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                       Marketplace
-                    </Link>
-                    <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      Verify
                     </Link>
                     <div className="px-3 py-2 space-y-2 border-t border-gray-700 mt-4 pt-4">
                       <Link href="/login" className="block">
@@ -309,14 +299,6 @@ export default function Navbar() {
                         My Works
                       </span>
                     </Link>
-                    <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Verify
-                      </span>
-                    </Link>
                     <Link href="/profile" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                       <span className="flex items-center">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,16 +343,13 @@ export default function Navbar() {
 
           {/* Compact Navigation */}
           <div className="flex items-center space-x-4 text-sm">
-            {!isMounted || !isAuthenticated ? (
+            {!isAuthenticated ? (
               <>
                 <Link href="/" className="hover:text-primary transition-colors">
                   Home
                 </Link>
                 <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
                   Market
-                </Link>
-                <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
-                  Verify
                 </Link>
               </>
             ) : (
@@ -383,9 +362,6 @@ export default function Navbar() {
                 </Link>
                 <Link href="/creator/works" className="hover:text-primary transition-colors hidden sm:inline">
                   Works
-                </Link>
-                <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
-                  Verify
                 </Link>
               </>
             )}
