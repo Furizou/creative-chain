@@ -1,24 +1,38 @@
 "use client";
 
 import Link from 'next/link';
-import { Music } from 'lucide-react';
+import { Music, Palette, Camera, FileText } from 'lucide-react';
+import { isImageUrl, getCategoryIcon } from '@/lib/utils/fileUtils';
 
 export default function WorkCard({ work }) {
+  const isImage = isImageUrl(work.file_url);
+  const iconName = getCategoryIcon(work.category);
+
+  // Map icon names to components
+  const iconComponents = {
+    Music,
+    Palette,
+    Camera,
+    FileText
+  };
+
+  const IconComponent = iconComponents[iconName] || FileText;
+
   return (
-    <Link 
+    <Link
       href={`/creator/works/${work.id}`}
       className="block bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
     >
       <div className="aspect-video bg-gray-100 relative">
-        {work.file_url ? (
-          <img 
-            src={work.file_url} 
-            alt={work.title} 
+        {work.file_url && isImage ? (
+          <img
+            src={work.file_url}
+            alt={work.title}
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Music className="w-8 h-8 text-gray-400" />
+            <IconComponent className="w-12 h-12 text-gray-400" />
           </div>
         )}
       </div>

@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import MetricsCard from '@/components/dashboard/MetricsCard'
-import { Music, FileText, TrendingUp, Wallet } from 'lucide-react'
+import { Music, FileText, TrendingUp, Wallet, Palette, Camera } from 'lucide-react'
+import { isImageUrl, getCategoryIcon } from '@/lib/utils/fileUtils'
 
 const supabase = createClient()
 
@@ -214,34 +215,49 @@ export default function CreatorDashboard() {
           </div>
         ) : (
           <div className="space-y-3">
-            {recentWorks.map((work) => (
-              <Link
-                key={work.id}
-                href={`/creator/works/${work.id}`}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-base rounded-lg flex items-center justify-center overflow-hidden">
-                    {work.file_url ? (
-                      <img
-                        src={work.file_url}
-                        alt={work.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <FileText className="w-8 h-8 text-gray-400" />
-                    )}
+            {recentWorks.map((work) => {
+              const isImage = isImageUrl(work.file_url);
+              const iconName = getCategoryIcon(work.category);
+
+              // Map icon names to components
+              const iconComponents = {
+                Music,
+                Palette,
+                Camera,
+                FileText
+              };
+
+              const IconComponent = iconComponents[iconName] || FileText;
+
+              return (
+                <Link
+                  key={work.id}
+                  href={`/creator/works/${work.id}`}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-base rounded-lg flex items-center justify-center overflow-hidden">
+                      {work.file_url && isImage ? (
+                        <img
+                          src={work.file_url}
+                          alt={work.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <IconComponent className="w-8 h-8 text-gray-400" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-structural">{work.title}</h3>
+                      <p className="text-sm text-gray-600">{work.category}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-structural">{work.title}</h3>
-                    <p className="text-sm text-gray-600">{work.category}</p>
+                  <div className="text-right">
+                    <p className="font-bold text-structural">{work.license_count || 0} Licenses</p>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-structural">{work.license_count || 0} Licenses</p>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

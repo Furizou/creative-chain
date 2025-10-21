@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from '@/hooks/useAuth';
+import { Music, Palette, Camera, FileText } from 'lucide-react';
+import { isImageUrl, getCategoryIcon } from '@/lib/utils/fileUtils';
 
 export default function WorkDetailPage() {
   const { id: workId } = useParams();
@@ -142,18 +144,35 @@ export default function WorkDetailPage() {
     );
   }
 
+  const isImage = isImageUrl(work?.file_url);
+  const iconName = getCategoryIcon(work?.category);
+
+  // Map icon names to components
+  const iconComponents = {
+    Music,
+    Palette,
+    Camera,
+    FileText
+  };
+
+  const IconComponent = iconComponents[iconName] || FileText;
+
   return (
     <div className="container mx-auto p-8">
       {/* Work Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
           {work.file_url && (
-            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-              <img
-                src={work.file_url}
-                alt={work.title}
-                className="w-full h-full object-cover"
-              />
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+              {isImage ? (
+                <img
+                  src={work.file_url}
+                  alt={work.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <IconComponent className="w-24 h-24 text-gray-400" />
+              )}
             </div>
           )}
         </div>
