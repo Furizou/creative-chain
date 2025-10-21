@@ -15,13 +15,25 @@ export function useAuth() {
       try {
         console.log('🔍 useAuth: Initializing auth with cookie-based client...')
 
-        // Use the new cookie-based getUser() method
+        // First check if there's a session (to avoid "session missing" errors)
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session) {
+          console.log('🔍 useAuth: No active session found')
+          setLoading(false)
+          return
+        }
+
+        // If there's a session, get the user details
         const { data: { user }, error } = await supabase.auth.getUser()
 
         console.log('🔍 useAuth: User result:', { user: user?.email, error })
 
         if (error) {
-          console.error('❌ useAuth: Error getting user:', error)
+          // Only log non-session errors
+          if (error.name !== 'AuthSessionMissingError') {
+            console.error('❌ useAuth: Error getting user:', error)
+          }
         }
 
         if (user) {
