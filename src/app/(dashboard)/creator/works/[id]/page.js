@@ -15,9 +15,12 @@ export default function WorkDetailsPage() {
   const { id: workId } = useParams();
   const [work, setWork] = useState(null);
   const [licenseOfferings, setLicenseOfferings] = useState([]);
+  const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(null);
 
   // Fetch work and license offerings data
   useEffect(() => {
@@ -74,6 +77,36 @@ export default function WorkDetailsPage() {
     fetchData();
   }, [workId, router]);
 
+  // Fetch transaction history data
+  useEffect(() => {
+    if (!workId) return;
+
+    const fetchHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        setHistoryError(null);
+
+        const response = await fetch(`/api/licenses/history/${workId}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch transaction history');
+        }
+
+        if (result.success) {
+          setHistory(result.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching transaction history:', err);
+        setHistoryError(err.message || 'Failed to load transaction history');
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [workId]);
+
   // Handle demo license creation
   const handleCreateDemoLicense = async () => {
     if (!workId || isCreatingDemo) return;
@@ -112,6 +145,46 @@ export default function WorkDetailsPage() {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(numPrice);
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Censor username for privacy
+  const censorUsername = (username) => {
+    if (!username || username.length < 3) return username || 'Unknown';
+    const firstChar = username[0];
+    const lastChar = username[username.length - 1];
+    const middle = '*'.repeat(Math.max(3, username.length - 2));
+    return `${firstChar}${middle}${lastChar}`;
+  };
+
+  // Format transaction hash for display
+  const formatTransactionHash = (hash) => {
+    if (!hash) return 'N/A';
+    return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
+  };
+
+  // Generate block explorer URL
+  const getBlockExplorerUrl = (hash) => {
+    if (!hash) return '#';
+    return `https://polygonscan.com/tx/${hash}`;
+  };
+
+  // Get verification status for transaction
+  const getVerificationStatus = (transaction) => {
+    if (transaction.nft_transaction_hash) {
+      return { status: 'Minted', hash: transaction.nft_transaction_hash };
+    } else {
+      return { status: 'Minting Pending', hash: null };
+    }
   };
 
   // Loading state
@@ -454,26 +527,124 @@ export default function WorkDetailsPage() {
             </h2>
           </div>
           <div className="px-6 py-6">
-            {/* Placeholder for transaction table */}
-            <div className="text-center py-12">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                />
-              </svg>
-              <h3 className="mt-4 text-sm font-medium text-gray-900">No transactions yet</h3>
-              <p className="mt-2 text-sm text-gray-500">
-                Transaction history will appear here once licenses are purchased.
-              </p>
-            </div>
+            {historyLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-3 text-sm text-gray-600">Loading transaction history...</span>
+              </div>
+            ) : historyError ? (
+              <div className="text-center py-12">
+                <svg
+                  className="mx-auto h-12 w-12 text-red-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <h3 className="mt-4 text-sm font-medium text-gray-900">Error loading transactions</h3>
+                <p className="mt-2 text-sm text-gray-500">{historyError}</p>
+              </div>
+            ) : history && history.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Buyer
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        License Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Verification
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {history.map((transaction, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDate(transaction.purchased_at)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {censorUsername(transaction.buyer_username)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                          {transaction.license_type || 'Standard License'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {formatPrice(transaction.price_bidr)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {(() => {
+                            const verificationStatus = getVerificationStatus(transaction);
+                            
+                            switch (verificationStatus.status) {
+                              case 'Minted':
+                                return (
+                                  <a
+                                    href={getBlockExplorerUrl(verificationStatus.hash)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-900 hover:underline font-mono"
+                                  >
+                                    {formatTransactionHash(verificationStatus.hash)}
+                                  </a>
+                                );
+                              case 'Minting Pending':
+                                return (
+                                  <span className="text-yellow-600 font-medium">
+                                    Minting Pending
+                                  </span>
+                                );
+                              default:
+                                return (
+                                  <span className="text-gray-400">Unknown</span>
+                                );
+                            }
+                          })()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
+                </svg>
+                <h3 className="mt-4 text-sm font-medium text-gray-900">No transactions yet</h3>
+                <p className="mt-2 text-sm text-gray-500">
+                  Transaction history will appear here once licenses are purchased.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
