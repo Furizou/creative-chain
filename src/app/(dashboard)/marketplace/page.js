@@ -30,7 +30,7 @@ export default function MarketplacePage() {
   const [filters, setFilters] = useState({
     search: '',
     category: '',
-    sort: 'latest',
+    sort: 'newest',
     page: 1
   });
 
