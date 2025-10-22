@@ -1,21 +1,31 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 
-export default function SearchBar({ onSearch, placeholder = "Search creative works..." }) {
-  const [searchTerm, setSearchTerm] = useState('');
+export default function SearchBar({ value = '', onChange, placeholder = "Search creative works..." }) {
+  const [searchTerm, setSearchTerm] = useState(value);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    setSearchTerm(value);
+  }, [value]);
 
   const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
+    const newValue = e.target.value;
+    setSearchTerm(newValue);
     
-    // Debounce search with 300ms delay
-    const timeoutId = setTimeout(() => {
-      onSearch(value);
-    }, 300);
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-    return () => clearTimeout(timeoutId);
+    // Debounce search with 300ms delay
+    timeoutRef.current = setTimeout(() => {
+      if (onChange) {
+        onChange(newValue);
+      }
+    }, 300);
   };
 
   return (

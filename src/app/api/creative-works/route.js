@@ -13,12 +13,39 @@ export async function GET(request) {
     const maxPrice = searchParams.get('max_price')
     const licenseType = searchParams.get('license_type')
     const hasActiveLicense = searchParams.get('has_active_license')
-    const sortBy = searchParams.get('sort_by') || 'created_at'
-    const sortOrder = searchParams.get('sort_order') || 'desc'
-    const sort = searchParams.get('sort') || 'latest'
+    const sort = searchParams.get('sort') || 'newest'
     const page = parseInt(searchParams.get('page')) || 1
     const limit = 12
     const offset = (page - 1) * limit
+
+    // Parse sort parameter
+    let sortField = 'created_at';
+    let sortOrder = 'desc';
+    let priceSort = null;
+
+    switch(sort) {
+      case 'newest':
+        sortField = 'created_at';
+        sortOrder = 'desc';
+        break;
+      case 'oldest':
+        sortField = 'created_at';
+        sortOrder = 'asc';
+        break;
+      case 'price_asc':
+        priceSort = 'asc';
+        sortField = 'created_at';
+        sortOrder = 'desc';
+        break;
+      case 'price_desc':
+        priceSort = 'desc';
+        sortField = 'created_at';
+        sortOrder = 'desc';
+        break;
+      default:
+        sortField = 'created_at';
+        sortOrder = 'desc';
+    }
 
     // Build the base query
     let query = supabase
@@ -68,9 +95,9 @@ export async function GET(request) {
         )
       `);
 
-    // Apply search filter
+    // Apply search filter - only search on main table fields
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,profiles.username.ilike.%${search}%`);
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     // Apply filters
@@ -82,12 +109,10 @@ export async function GET(request) {
       query = query.eq('creator_id', creator);
     }
 
-    // Apply sorting
-    const validSortFields = ['created_at', 'title', 'category', 'updated_at'];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
-    const order = sortOrder.toLowerCase() === 'asc' ? 'asc' : 'desc';
-    
-    query = query.order(sortField, { ascending: order === 'asc' });
+    // Apply sorting (for non-price sorts)
+    if (!priceSort) {
+      query = query.order(sortField, { ascending: sortOrder === 'asc' });
+    }
 
     // Get total count for pagination (without filters for now - optimize later)
     const { count } = await supabase
@@ -104,13 +129,27 @@ export async function GET(request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Post-process data to apply price and license filters
-    let filteredWorks = works;
+    // Post-process data to apply additional filters
+    let filteredWorks = works || [];
+
+    // Filter by search term on creator username (post-query filter)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredWorks = filteredWorks.filter(work => {
+        // Check if already matched by title/description in the query
+        const matchesTitle = work.title?.toLowerCase().includes(searchLower);
+        const matchesDescription = work.description?.toLowerCase().includes(searchLower);
+        const matchesCreator = work.profiles?.username?.toLowerCase().includes(searchLower) || 
+                              work.profiles?.full_name?.toLowerCase().includes(searchLower);
+        
+        return matchesTitle || matchesDescription || matchesCreator;
+      });
+    }
 
     // Filter by price range (check active license offerings)
     if (minPrice || maxPrice) {
       filteredWorks = filteredWorks.filter(work => {
-        const activeLicenses = work.license_offerings.filter(lo => lo.is_active);
+        const activeLicenses = (work.license_offerings || []).filter(lo => lo.is_active);
         if (activeLicenses.length === 0) return false;
         
         const prices = activeLicenses.map(lo => parseFloat(lo.price_idr));
@@ -128,7 +167,7 @@ export async function GET(request) {
     // Filter by license type
     if (licenseType) {
       filteredWorks = filteredWorks.filter(work => {
-        return work.license_offerings.some(lo => 
+        return (work.license_offerings || []).some(lo => 
           lo.is_active && lo.license_type === licenseType
         );
       });
@@ -137,14 +176,15 @@ export async function GET(request) {
     // Filter by active license availability
     if (hasActiveLicense === 'true') {
       filteredWorks = filteredWorks.filter(work => {
-        return work.license_offerings.some(lo => lo.is_active);
+        return (work.license_offerings || []).some(lo => lo.is_active);
       });
     }
 
     // Calculate additional metadata for each work
     const processedWorks = filteredWorks.map(work => {
-      const activeLicenses = work.license_offerings.filter(lo => lo.is_active);
+      const activeLicenses = (work.license_offerings || []).filter(lo => lo.is_active);
       const prices = activeLicenses.map(lo => parseFloat(lo.price_idr));
+      const profiles = work.profiles || {};
       
       return {
         id: work.id,
@@ -156,13 +196,13 @@ export async function GET(request) {
         created_at: work.created_at,
         updated_at: work.updated_at,
         creator: {
-          id: work.profiles.id,
-          username: work.profiles.username,
-          full_name: work.profiles.full_name,
-          avatar_url: work.profiles.avatar_url,
-          wallet_address: work.profiles.wallet_address
+          id: profiles.id || null,
+          username: profiles.username || null,
+          full_name: profiles.full_name || null,
+          avatar_url: profiles.avatar_url || null,
+          wallet_address: profiles.wallet_address || null
         },
-        copyright: work.copyright_certificates[0] || null,
+        copyright: (work.copyright_certificates || [])[0] || null,
         license_offerings: activeLicenses.map(lo => ({
           id: lo.id,
           license_type: lo.license_type,
@@ -173,7 +213,7 @@ export async function GET(request) {
           usage_limit: lo.usage_limit,
           duration_days: lo.duration_days
         })),
-        royalty_splits: work.royalty_splits.map(rs => ({
+        royalty_splits: (work.royalty_splits || []).map(rs => ({
           recipient_address: rs.recipient_address,
           split_percentage: rs.split_percentage
         })),
@@ -189,6 +229,20 @@ export async function GET(request) {
         }
       };
     });
+
+    // Apply price sorting if needed
+    if (priceSort) {
+      processedWorks.sort((a, b) => {
+        const priceA = a.pricing.min_price_idr || 0;
+        const priceB = b.pricing.min_price_idr || 0;
+        
+        if (priceSort === 'asc') {
+          return priceA - priceB;
+        } else {
+          return priceB - priceA;
+        }
+      });
+    }
 
     // Calculate pagination metadata
     const totalRecords = filteredWorks.length; // This is approximate after filtering
@@ -218,13 +272,16 @@ export async function GET(request) {
       },
       sort: {
         sort_by: sortField,
-        sort_order: order
+        sort_order: sortOrder
       }
     });
 
   } catch (error) {
     console.error('Creative works browse API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error.message 
+    }, { status: 500 });
   }
 }
 
