@@ -64,7 +64,7 @@ export async function middleware(req) {
   // Dashboard paths that require authentication
   const protectedPaths = [
     '/creator',
-    '/dashboard',
+    '/creator',
     '/profile',
     '/upload',
     '/test-db',

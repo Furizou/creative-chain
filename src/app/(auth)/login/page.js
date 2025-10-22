@@ -129,7 +129,7 @@ export default function LoginPage() {
 
       console.log('✅ Demo login successful, redirecting to dashboard');
       // Redirect to dashboard
-      window.location.href = '/dashboard';
+      window.location.href = '/creator';
 
     } catch (error) {
       console.error('❌ Demo login error:', error);
