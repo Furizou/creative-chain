@@ -1,132 +1,315 @@
-import { createClient } from '@supabase/supabase-js';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(req) {
+export async function GET(request) {
   try {
-    const url = new URL(req.url);
-    let creatorId = url.searchParams.get('creator_id');
-    const period = url.searchParams.get('period') || 'month';
-    const category = url.searchParams.get('category') || 'all';
+    const { searchParams } = new URL(request.url);
+    
+    // Get authenticated user
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // If no creator_id provided, get from authenticated session
-    if (!creatorId) {
-      const supabase = await createServerClient();
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    // Date range parameters
+    const dateFrom = searchParams.get('date_from') || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const dateTo = searchParams.get('date_to') || new Date().toISOString();
+    
+    // Filter parameters
+    const workId = searchParams.get('work_id');
+    const licenseType = searchParams.get('license_type');
+    const groupBy = searchParams.get('group_by') || 'date'; // date, license_type, work
+
+    // Base query for creator's earnings
+    let query = supabase
+      .from('licenses')
+      .select(`
+        id,
+        purchased_at,
+        work_id,
+        orders!inner(
+          amount_idr,
+          amount_bidr,
+          status
+        ),
+        license_offerings!inner(
+          license_type,
+          title
+        ),
+        creative_works!inner(
+          id,
+          title,
+          creator_id
+        ),
+        royalty_distributions(
+          amount_idr,
+          amount_bidr,
+          recipient_address,
+          status
+        )
+      `)
+      .eq('creative_works.creator_id', user.id)
+      .eq('orders.status', 'completed')
+      .gte('purchased_at', dateFrom)
+      .lte('purchased_at', dateTo);
+
+    // Apply additional filters
+    if (workId) {
+      query = query.eq('work_id', workId);
+    }
+
+    if (licenseType) {
+      query = query.eq('license_offerings.license_type', licenseType);
+    }
+
+    const { data: licenses, error } = await query;
+
+    if (error) {
+      console.error('Analytics query error:', error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Calculate total earnings
+    const totalSales = licenses.length;
+    const totalRevenueIdr = licenses.reduce((sum, license) => 
+      sum + parseFloat(license.orders.amount_idr), 0
+    );
+    const totalRevenueBidr = licenses.reduce((sum, license) => 
+      sum + parseFloat(license.orders.amount_bidr), 0
+    );
+
+    // Calculate actual creator earnings (after royalty splits)
+    const creatorEarningsIdr = licenses.reduce((sum, license) => {
+      const royaltyDistributions = license.royalty_distributions || [];
+      const creatorDistribution = royaltyDistributions.find(dist => 
+        dist.recipient_address === user.wallet_address
+      );
+      return sum + (creatorDistribution ? parseFloat(creatorDistribution.amount_idr) : parseFloat(license.orders.amount_idr));
+    }, 0);
+
+    const creatorEarningsBidr = licenses.reduce((sum, license) => {
+      const royaltyDistributions = license.royalty_distributions || [];
+      const creatorDistribution = royaltyDistributions.find(dist => 
+        dist.recipient_address === user.wallet_address
+      );
+      return sum + (creatorDistribution ? parseFloat(creatorDistribution.amount_bidr) : parseFloat(license.orders.amount_bidr));
+    }, 0);
+
+    // Group data based on groupBy parameter
+    let groupedData = {};
+
+    if (groupBy === 'date') {
+      // Group by date (daily)
+      groupedData = licenses.reduce((acc, license) => {
+        const date = license.purchased_at.split('T')[0]; // Get YYYY-MM-DD
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            sales_count: 0,
+            revenue_idr: 0,
+            revenue_bidr: 0,
+            creator_earnings_idr: 0,
+            creator_earnings_bidr: 0
+          };
+        }
+        
+        acc[date].sales_count += 1;
+        acc[date].revenue_idr += parseFloat(license.orders.amount_idr);
+        acc[date].revenue_bidr += parseFloat(license.orders.amount_bidr);
+        
+        // Calculate creator's share
+        const royaltyDistributions = license.royalty_distributions || [];
+        const creatorDistribution = royaltyDistributions.find(dist => 
+          dist.recipient_address === user.wallet_address
+        );
+        acc[date].creator_earnings_idr += creatorDistribution ? 
+          parseFloat(creatorDistribution.amount_idr) : parseFloat(license.orders.amount_idr);
+        acc[date].creator_earnings_bidr += creatorDistribution ? 
+          parseFloat(creatorDistribution.amount_bidr) : parseFloat(license.orders.amount_bidr);
+        
+        return acc;
+      }, {});
+
+    } else if (groupBy === 'license_type') {
+      // Group by license type
+      groupedData = licenses.reduce((acc, license) => {
+        const type = license.license_offerings.license_type;
+        if (!acc[type]) {
+          acc[type] = {
+            license_type: type,
+            sales_count: 0,
+            revenue_idr: 0,
+            revenue_bidr: 0,
+            creator_earnings_idr: 0,
+            creator_earnings_bidr: 0
+          };
+        }
+        
+        acc[type].sales_count += 1;
+        acc[type].revenue_idr += parseFloat(license.orders.amount_idr);
+        acc[type].revenue_bidr += parseFloat(license.orders.amount_bidr);
+        
+        const royaltyDistributions = license.royalty_distributions || [];
+        const creatorDistribution = royaltyDistributions.find(dist => 
+          dist.recipient_address === user.wallet_address
+        );
+        acc[type].creator_earnings_idr += creatorDistribution ? 
+          parseFloat(creatorDistribution.amount_idr) : parseFloat(license.orders.amount_idr);
+        acc[type].creator_earnings_bidr += creatorDistribution ? 
+          parseFloat(creatorDistribution.amount_bidr) : parseFloat(license.orders.amount_bidr);
+        
+        return acc;
+      }, {});
+
+    } else if (groupBy === 'work') {
+      // Group by creative work
+      groupedData = licenses.reduce((acc, license) => {
+        const workId = license.work_id;
+        const workTitle = license.creative_works.title;
+        
+        if (!acc[workId]) {
+          acc[workId] = {
+            work_id: workId,
+            work_title: workTitle,
+            sales_count: 0,
+            revenue_idr: 0,
+            revenue_bidr: 0,
+            creator_earnings_idr: 0,
+            creator_earnings_bidr: 0
+          };
+        }
+        
+        acc[workId].sales_count += 1;
+        acc[workId].revenue_idr += parseFloat(license.orders.amount_idr);
+        acc[workId].revenue_bidr += parseFloat(license.orders.amount_bidr);
+        
+        const royaltyDistributions = license.royalty_distributions || [];
+        const creatorDistribution = royaltyDistributions.find(dist => 
+          dist.recipient_address === user.wallet_address
+        );
+        acc[workId].creator_earnings_idr += creatorDistribution ? 
+          parseFloat(creatorDistribution.amount_idr) : parseFloat(license.orders.amount_idr);
+        acc[workId].creator_earnings_bidr += creatorDistribution ? 
+          parseFloat(creatorDistribution.amount_bidr) : parseFloat(license.orders.amount_bidr);
+        
+        return acc;
+      }, {});
+    }
+
+    // Get top performing works
+    const topWorks = await supabase
+      .from('licenses')
+      .select(`
+        work_id,
+        creative_works!inner(
+          title,
+          creator_id
+        ),
+        orders!inner(
+          amount_idr,
+          status
+        )
+      `)
+      .eq('creative_works.creator_id', user.id)
+      .eq('orders.status', 'completed')
+      .gte('purchased_at', dateFrom)
+      .lte('purchased_at', dateTo);
+
+    const topWorksData = topWorks.data ? 
+      Object.values(
+        topWorks.data.reduce((acc, item) => {
+          const workId = item.work_id;
+          if (!acc[workId]) {
+            acc[workId] = {
+              work_id: workId,
+              title: item.creative_works.title,
+              sales_count: 0,
+              revenue_idr: 0
+            };
+          }
+          acc[workId].sales_count += 1;
+          acc[workId].revenue_idr += parseFloat(item.orders.amount_idr);
+          return acc;
+        }, {})
+      ).sort((a, b) => b.revenue_idr - a.revenue_idr).slice(0, 5) : [];
+
+    return NextResponse.json({
+      success: true,
+      summary: {
+        total_sales: totalSales,
+        total_revenue: {
+          idr: totalRevenueIdr,
+          bidr: totalRevenueBidr
+        },
+        creator_earnings: {
+          idr: creatorEarningsIdr,
+          bidr: creatorEarningsBidr
+        },
+        date_range: {
+          from: dateFrom,
+          to: dateTo
+        }
+      },
+      grouped_data: Object.values(groupedData),
+      top_works: topWorksData,
+      metadata: {
+        group_by: groupBy,
+        filters: {
+          work_id: workId,
+          license_type: licenseType
+        }
       }
-      
-      creatorId = session.user.id;
-    }
-
-    // Create admin client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const svc = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Calculate date range based on period
-    const now = new Date();
-    let from;
-    switch(period) {
-      case 'day':
-        from = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
-        break;
-      case 'week':
-        from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case 'year':
-        from = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-        break;
-      default:
-        from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
-    const to = new Date();
-
-    // Get creator's works
-    const { data: works, error: worksErr } = await svc
-      .from('creative_works')
-      .select('id,title,category')
-      .eq('creator_id', creatorId);
-
-    if (worksErr) {
-      console.error('Works error:', worksErr);
-      return new Response(JSON.stringify({ totalRevenue: 0, totalSales: 0, revenueByType: {}, salesByDay: {}, topWorks: [] }), { status: 200 });
-    }
-
-    const workIds = new Set((works || []).map(w => w.id));
-    const worksById = (works || []).reduce((acc, w) => { acc[w.id] = w; return acc; }, {});
-
-    // Get all orders
-    const { data: orders, error: ordersErr } = await svc
-      .from('orders')
-      .select('id,amount_bidr,license_offering_id,created_at');
-
-    if (ordersErr) {
-      console.error('Orders error:', ordersErr);
-      return new Response(JSON.stringify({ totalRevenue: 0, totalSales: 0, revenueByType: {}, salesByDay: {}, topWorks: [] }), { status: 200 });
-    }
-
-    // Get license offerings
-    const { data: offerings } = await svc.from('license_offerings').select('id,work_id,license_type');
-    const offeringsById = (offerings || []).reduce((acc, o) => { acc[o.id] = o; return acc; }, {});
-
-    // Filter orders for creator's works within date range
-    const creatorOrders = (orders || []).filter(o => {
-      const lo = offeringsById[o.license_offering_id];
-      if (!lo) return false;
-      if (!workIds.has(lo.work_id)) return false;
-      
-      const orderDate = new Date(o.created_at);
-      if (orderDate < from || orderDate > to) return false;
-      
-      if (category !== 'all') {
-        const work = worksById[lo.work_id];
-        if (!work || work.category !== category) return false;
-      }
-      
-      return true;
     });
 
-    // Aggregate analytics
-    const revenueByType = {};
-    const salesByDay = {};
-    const topWorksMap = {};
-    let totalRevenue = 0;
+  } catch (error) {
+    console.error('Creator earnings API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 
-    creatorOrders.forEach(o => {
-      const lo = offeringsById[o.license_offering_id];
-      const work = worksById[lo.work_id];
-      const type = lo.license_type || 'unknown';
-      const day = new Date(o.created_at).toISOString().slice(0, 10);
-      const amt = Number(o.amount_bidr || 0);
-      
-      totalRevenue += amt;
-      revenueByType[type] = (revenueByType[type] || 0) + amt;
-      salesByDay[day] = (salesByDay[day] || 0) + 1;
-      
-      if (!topWorksMap[work.id]) {
-        topWorksMap[work.id] = { workId: work.id, title: work.title, revenue: 0, count: 0 };
-      }
-      topWorksMap[work.id].revenue += amt;
-      topWorksMap[work.id].count += 1;
+// POST method for creating analytics events
+export async function POST(request) {
+  try {
+    const supabase = await createClient();
+    const { work_id, event_type, user_id } = await request.json();
+
+    if (!work_id || !event_type) {
+      return NextResponse.json({ 
+        error: 'work_id and event_type are required' 
+      }, { status: 400 });
+    }
+
+    const validEventTypes = ['view', 'play', 'download', 'share', 'favorite'];
+    if (!validEventTypes.includes(event_type)) {
+      return NextResponse.json({ 
+        error: 'Invalid event_type. Must be one of: ' + validEventTypes.join(', ') 
+      }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('analytics_events')
+      .insert({
+        work_id,
+        event_type,
+        user_id: user_id || null
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Analytics event creation error:', error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      event: data
     });
 
-    const topWorks = Object.values(topWorksMap).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
-
-    return new Response(JSON.stringify({
-      totalRevenue,
-      totalSales: creatorOrders.length,
-      revenueByType,
-      salesByDay,
-      topWorks
-    }), { status: 200 });
-
-  } catch(err) {
-    console.error('analytics error', err);
-    return new Response(JSON.stringify({ totalRevenue: 0, totalSales: 0, revenueByType: {}, salesByDay: {}, topWorks: [] }), { status: 200 });
+  } catch (error) {
+    console.error('Analytics event API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
