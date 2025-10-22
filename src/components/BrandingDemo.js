@@ -3,7 +3,7 @@ export default function BrandingDemo() {
     <div className="p-8 space-y-6">
       <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
         <h1 className="text-4xl font-black text-structural mb-4">
-          CreativeChain Branding Demo
+          SINAR Branding Demo
         </h1>
         <p className="text-structural mb-4">
           This is a demonstration of our custom branding configuration using Inter font for body text.

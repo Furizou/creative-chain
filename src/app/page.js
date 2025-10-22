@@ -1,11 +1,21 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <div className="bg-base text-structural min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="max-w-3xl">
-          <h1 className="text-6xl font-black mb-6">CreativeChain</h1>
+          <div className="mb-6">
+            <Image
+              src="/logo/logo_black.svg"
+              alt="SINAR Logo"
+              width={240}
+              height={64}
+              className="h-16 w-auto"
+            />
+          </div>
+          {/* <h1 className="text-6xl font-black mb-6">SINAR</h1> */}
           <p className="text-xl mb-8 text-gray-700">
             Empowering creators through blockchain technology. Build, collaborate, and monetize your creative work in a secure, decentralized ecosystem.
           </p>

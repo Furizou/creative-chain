@@ -109,7 +109,7 @@ The Creator grants the Licensee a non-exclusive, non-transferable license to use
 This License is valid for 365 days from the date of purchase. Renewal required for continued commercial use.
 
 5. ATTRIBUTION
-Attribution format: "Created by [Creator Name] via CreativeChain"
+Attribution format: "Created by [Creator Name] via SINAR"
 Attribution required in final deliverables or credits section.
 
 6. OWNERSHIP
@@ -164,7 +164,7 @@ All uses permitted in Standard Commercial License, PLUS:
 This License is perpetual and does not require renewal.
 
 5. ATTRIBUTION
-Attribution format: "Created by [Creator Name] via CreativeChain"
+Attribution format: "Created by [Creator Name] via SINAR"
 Attribution required in professional/published work credits or descriptions.
 
 6. TRANSFERS
@@ -297,7 +297,7 @@ Valid for 90 days from purchase. Unlimited duration for published content during
 - Ad revenue: Permitted
 
 7. ATTRIBUTION
-Recommended format: "Design by [Creator Name] @CreativeChain"
+Recommended format: "Design by [Creator Name] @SINAR"
 Tag or credit Creator when possible.
 
 8. MODIFICATIONS

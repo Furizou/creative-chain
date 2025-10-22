@@ -116,7 +116,7 @@ export default function ProfilePage(){
             <strong>ℹ️ System-Managed Custodial Wallet</strong>
           </p>
           <p className="text-xs text-blue-800">
-            Your wallet is securely managed by CreativeChain. You can view your wallet address below, but cannot modify it. This ensures your assets remain safe and secure.
+            Your wallet is securely managed by SINAR. You can view your wallet address below, but cannot modify it. This ensures your assets remain safe and secure.
           </p>
         </div>
         <div>
