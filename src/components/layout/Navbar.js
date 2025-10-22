@@ -2,6 +2,7 @@
 
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -142,11 +143,14 @@ export default function Navbar() {
        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="flex justify-between items-center h-16">
            {/* Logo */}
-           <Link href={isAuthenticated ? "/creator" : "/"} className="flex items-center space-x-2">
-             <div className="bg-primary text-structural px-3 py-1 rounded font-black text-xl">
-               CC
-             </div>
-             <span className="font-heading font-bold text-xl">CreativeChain</span>
+           <Link href={isAuthenticated ? "/creator" : "/"} className="flex items-center">
+             <Image
+               src="/logo/logo_white.svg"
+               alt="SINAR Logo"
+               width={120}
+               height={32}
+               className="h-8 w-auto"
+             />
            </Link>
 
 

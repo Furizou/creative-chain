@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* CreativeChain Custom Colors */
+/* SINAR Custom Colors */
 :root {
   --color-base: #F8F8F8;
   --color-primary: #FFCC00;
@@ -28,7 +28,7 @@
 .border-structural { border-color: var(--color-structural); }
 .border-warning { border-color: var(--color-warning); }
 
-/* CreativeChain Global Styles */
+/* SINAR Global Styles */
 body {
   font-family: var(--font-inter), sans-serif;
 }

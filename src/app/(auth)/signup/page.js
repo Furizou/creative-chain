@@ -177,7 +177,7 @@ export default function SignupPage() {
     <>
       <div className="mb-6">
         <h1 className="text-3xl font-black text-structural text-center">Create Account</h1>
-        <p className="text-structural/70 text-center mt-2">Join CreativeChain to protect your creative works</p>
+        <p className="text-structural/70 text-center mt-2">Join SINAR to protect your creative works</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">

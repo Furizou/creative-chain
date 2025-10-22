@@ -424,7 +424,7 @@ export default function CreatorDashboard() {
       {recentWorks.length === 0 && (
         <div className="bg-white p-12 rounded-xl border border-gray-200 text-center">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to CreativeChain!</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to SINAR!</h3>
           <p className="text-gray-600 mb-6">Start by uploading your first creative work to see analytics and earn from your creativity.</p>
           <div className="flex justify-center space-x-4">
             <Link 

@@ -258,7 +258,7 @@ export default function WorkDetailsPage() {
             <p className="text-gray-600 mb-6">{error}</p>
             <button
               onClick={() => router.back()}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="bg-primary text-structural px-6 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               Go Back
             </button>
@@ -330,7 +330,7 @@ export default function WorkDetailsPage() {
               {/* Work Title and Category */}
               <div className="p-6">
                 <div className="mb-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                     {work.category}
                   </span>
                 </div>
@@ -410,7 +410,7 @@ export default function WorkDetailsPage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Certificate Status</h2>
                 {certificateLoading ? (
                   <div className="flex items-center justify-center py-4">
-                    <svg className="animate-spin h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-5 w-5 text-primary mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -508,7 +508,7 @@ export default function WorkDetailsPage() {
                         <>
                           <button
                             onClick={() => router.push(`/creator/works/${workId}/configure`)}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
                           >
                             <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -519,7 +519,7 @@ export default function WorkDetailsPage() {
                             <button
                               onClick={handleCreateDemoLicense}
                               disabled={isCreatingDemo}
-                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-structural bg-primary hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                             >
                               {isCreatingDemo ? (
                                 <>
@@ -546,7 +546,7 @@ export default function WorkDetailsPage() {
                       {licenseOfferings.map((license) => (
                         <div
                           key={license.id}
-                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all duration-200 flex flex-col"
+                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-yellow-300 transition-all duration-200 flex flex-col"
                         >
                           {/* Top Content */}
                           <div className="flex-1">
@@ -587,7 +587,7 @@ export default function WorkDetailsPage() {
 
                             <button
                               onClick={() => router.push(`/creator/works/${workId}/checkout?license_id=${license.id}`)}
-                              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 transition-colors font-medium"
+                              className="w-full bg-primary text-structural py-2 px-4 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-400 transition-colors font-medium"
                             >
                               Buy Now
                             </button>
@@ -610,7 +610,7 @@ export default function WorkDetailsPage() {
                         <button
                           onClick={handleCreateDemoLicense}
                           disabled={isCreatingDemo}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 transition-colors"
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-structural bg-primary hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-400 transition-colors"
                         >
                           {isCreatingDemo ? 'Creating...' : 'Create Demo License'}
                         </button>
@@ -634,7 +634,7 @@ export default function WorkDetailsPage() {
           <div className="px-6 py-6">
             {historyLoading ? (
               <div className="flex justify-center items-center py-12">
-                <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -706,7 +706,7 @@ export default function WorkDetailsPage() {
                                     href={getBlockExplorerUrl(verificationStatus.hash)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-900 hover:underline font-mono"
+                                    className="text-primary hover:opacity-80 hover:underline font-mono"
                                   >
                                     {formatTransactionHash(verificationStatus.hash)}
                                   </a>
