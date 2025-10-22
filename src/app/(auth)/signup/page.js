@@ -176,14 +176,14 @@ export default function SignupPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 text-center">Create Account</h1>
-        <p className="text-gray-600 text-center mt-2">Join CreativeChain to protect your creative works</p>
+        <h1 className="text-3xl font-black text-structural text-center">Create Account</h1>
+        <p className="text-structural/70 text-center mt-2">Join CreativeChain to protect your creative works</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Full Name */}
         <div>
-          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="fullName" className="block text-sm font-semibold text-structural mb-2">
             Full Name
           </label>
           <input
@@ -192,17 +192,17 @@ export default function SignupPage() {
             name="fullName"
             value={formData.fullName}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.fullName ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-gray-400 ${
+              errors.fullName ? 'border-warning text-warning' : 'border-gray-200 text-structural'
             }`}
             placeholder="Enter your full name"
           />
-          {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
+          {errors.fullName && <p className="text-warning text-sm mt-1">{errors.fullName}</p>}
         </div>
 
         {/* Username */}
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="username" className="block text-sm font-semibold text-structural mb-2">
             Username
           </label>
           <input
@@ -211,17 +211,17 @@ export default function SignupPage() {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.username ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-gray-400 ${
+              errors.username ? 'border-warning text-warning' : 'border-gray-200 text-structural'
             }`}
             placeholder="Choose a username"
           />
-          {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
+          {errors.username && <p className="text-warning text-sm mt-1">{errors.username}</p>}
         </div>
 
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="email" className="block text-sm font-semibold text-structural mb-2">
             Email Address
           </label>
           <input
@@ -230,17 +230,17 @@ export default function SignupPage() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-gray-400 ${
+              errors.email ? 'border-warning text-warning' : 'border-gray-200 text-structural'
             }`}
             placeholder="Enter your email"
           />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-warning text-sm mt-1">{errors.email}</p>}
         </div>
 
         {/* Password */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="password" className="block text-sm font-semibold text-structural mb-2">
             Password
           </label>
           <input
@@ -249,17 +249,17 @@ export default function SignupPage() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.password ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-gray-400 ${
+              errors.password ? 'border-warning text-warning' : 'border-gray-200 text-structural'
             }`}
             placeholder="Create a strong password"
           />
-          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+          {errors.password && <p className="text-warning text-sm mt-1">{errors.password}</p>}
         </div>
 
         {/* Confirm Password */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-structural mb-2">
             Confirm Password
           </label>
           <input
@@ -268,26 +268,26 @@ export default function SignupPage() {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-gray-400 ${
+              errors.confirmPassword ? 'border-warning text-warning' : 'border-gray-200 text-structural'
             }`}
             placeholder="Confirm your password"
           />
-          {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+          {errors.confirmPassword && <p className="text-warning text-sm mt-1">{errors.confirmPassword}</p>}
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-primary text-structural py-3 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
 
         {/* Error Messages */}
         {errors.submit && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-warning/10 border border-warning/20 text-warning px-4 py-3 rounded-lg">
             {errors.submit}
           </div>
         )}
@@ -302,9 +302,9 @@ export default function SignupPage() {
 
       {/* Login Link */}
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-structural/70">
           Already have an account?{' '}
-          <Link href="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+          <Link href="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors">
             Sign in
           </Link>
         </p>
