@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 /**
  * POST /api/orders/create
@@ -17,10 +18,7 @@ export async function POST(request) {
   try {
     // 1. Authentication: Secure the route with mock-aware logic
     const DEMO_BUYER_ID = 'ec452ac9-87d2-4df9-8f2d-c8efae09d5ab';
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    const supabase = await createServerClient();
 
     // First, always try to get a real session
     const { data: { session } } = await supabase.auth.getSession();
