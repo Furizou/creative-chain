@@ -18,11 +18,11 @@ export default function Navbar() {
  };
 
 
- const AuthButtons = () => {
+ const AuthButtons = ({ compact = false }) => {
    // Show loading skeleton during loading
    if (loading) {
      return (
-       <div className="px-4 py-2 bg-gray-600 rounded-lg animate-pulse">
+       <div className={`${compact ? 'px-4 py-1.5' : 'px-4 py-2'} bg-gray-600 rounded-lg animate-pulse`}>
          <div className="w-16 h-4 bg-gray-500 rounded"></div>
        </div>
      );
@@ -34,7 +34,7 @@ export default function Navbar() {
        <div className="relative">
          <button
            onClick={() => setShowUserMenu(!showUserMenu)}
-           className="flex items-center space-x-3 hover:text-primary transition-colors group"
+           className={`flex items-center space-x-3 ${compact ? 'text-sm' : ''} hover:text-primary transition-colors group`}
          >
            <div className="relative">
              <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
