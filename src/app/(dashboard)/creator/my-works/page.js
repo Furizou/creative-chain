@@ -115,14 +115,6 @@ export default function MyWorksPage() {
           ))}
         </div>
       )}
-
-      {works.length === 0 ? (
-        <p>No works yet.</p>
-      ) : (
-        <ul className="space-y-4">
-          {works.map(work => <WorkCard key={work.id} work={work} />)}
-        </ul>
-      )}
     </div>
   );
 }
