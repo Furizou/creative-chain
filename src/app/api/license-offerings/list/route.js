@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(req) {
   try {
+    const supabase = await createClient();
     const url = new URL(req.url);
     const workId = url.searchParams.get('work_id');
 
