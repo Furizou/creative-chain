@@ -5,7 +5,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import MetricsCard from '@/components/dashboard/MetricsCard'
-import { Music, FileText, TrendingUp, Wallet, Palette, Camera } from 'lucide-react'
+import RevenueChart from '@/components/dashboard/RevenueChart'
+import SalesActivityChart from '@/components/dashboard/SalesActivityChart'
+import WorksPerformanceTable from '@/components/dashboard/WorksPerformanceTable'
+import CategoryBreakdownChart from '@/components/dashboard/CategoryBreakdownChart'
+import { Music, FileText, TrendingUp, Wallet, Palette, Camera, Eye, Download, Star, Calendar } from 'lucide-react'
 import { isImageUrl, getCategoryIcon } from '@/lib/utils/fileUtils'
 
 const supabase = createClient()
@@ -18,13 +22,32 @@ export default function CreatorDashboard() {
     availableBalance: 0
   })
   const [recentWorks, setRecentWorks] = useState([])
+  const [revenueData, setRevenueData] = useState([])
+  const [salesActivity, setSalesActivity] = useState({ dailyActivity: [], summary: {}, categoryBreakdown: [], licenseTypeBreakdown: [] })
+  const [worksPerformance, setWorksPerformance] = useState([])
   const [loading, setLoading] = useState(true)
+  const [chartsLoading, setChartsLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch creator stats
-    fetchCreatorStats()
-    fetchRecentWorks()
+    // Fetch all dashboard data
+    fetchDashboardData()
   }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      await Promise.all([
+        fetchCreatorStats(),
+        fetchRecentWorks(),
+        fetchRevenueData(),
+        fetchSalesActivity(),
+        fetchWorksPerformance()
+      ])
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setChartsLoading(false)
+    }
+  }
 
   const fetchCreatorStats = async () => {
     try {
@@ -57,6 +80,42 @@ export default function CreatorDashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  }
+
+  const fetchRevenueData = async () => {
+    try {
+      const response = await fetch('/api/analytics/revenue-chart');
+      if (response.ok) {
+        const data = await response.json();
+        setRevenueData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching revenue data:', error);
+    }
+  }
+
+  const fetchSalesActivity = async () => {
+    try {
+      const response = await fetch('/api/analytics/sales-activity');
+      if (response.ok) {
+        const data = await response.json();
+        setSalesActivity(data);
+      }
+    } catch (error) {
+      console.error('Error fetching sales activity:', error);
+    }
+  }
+
+  const fetchWorksPerformance = async () => {
+    try {
+      const response = await fetch('/api/analytics/works-performance');
+      if (response.ok) {
+        const data = await response.json();
+        setWorksPerformance(data);
+      }
+    } catch (error) {
+      console.error('Error fetching works performance:', error);
     }
   }
 
@@ -112,18 +171,35 @@ export default function CreatorDashboard() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-black text-structural">Creator Dashboard</h1>
-        <p className="text-gray-600 mt-2">Overview of your creative works performance</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-4xl font-black text-structural">Creator Dashboard</h1>
+          <p className="text-gray-600 mt-2">Comprehensive overview of your creative works performance and analytics</p>
+        </div>
+        <div className="flex space-x-3">
+          <Link 
+            href="/creator/works/new"
+            className="bg-primary text-structural px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+          >
+            Upload Work
+          </Link>
+          <Link 
+            href="/creator/analytics"
+            className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+          >
+            Full Analytics
+          </Link>
+        </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricsCard
           title="Total Works"
           value={stats.totalWorks}
-          icon={<Music className="w-6 h-6 text-primary" />}
+          icon={<FileText className="w-6 h-6 text-primary" />}
           bgColor="bg-primary/10"
+          subtitle="Creative works uploaded"
         />
         <MetricsCard
           title="Total Revenue"
@@ -135,32 +211,98 @@ export default function CreatorDashboard() {
         <MetricsCard
           title="Total Sales"
           value={stats.totalSales}
-          icon={<FileText className="w-6 h-6 text-structural" />}
+          icon={<Star className="w-6 h-6 text-structural" />}
           bgColor="bg-structural/10"
           subtitle="License purchases"
         />
         <MetricsCard
           title="Available Balance"
           value={`Rp ${(stats.availableBalance || 0).toLocaleString('id-ID')}`}
-          icon={<Wallet className="w-6 h-6 text-warning" />}
-          bgColor="bg-warning/10"
+          icon={<Wallet className="w-6 h-6 text-green-600" />}
+          bgColor="bg-green-50"
           subtitle="Ready to withdraw"
         />
       </div>
 
+      {/* Enhanced Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Recent Sales (30d)</p>
+              <p className="text-2xl font-bold text-gray-900">{salesActivity.summary.totalSales || 0}</p>
+            </div>
+            <Eye className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Avg Sale Value</p>
+              <p className="text-2xl font-bold text-gray-900">Rp {(salesActivity.summary.avgSaleValue || 0).toLocaleString('id-ID')}</p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Top Performing</p>
+              <p className="text-2xl font-bold text-gray-900">{worksPerformance[0]?.title?.substring(0, 15) || 'No data'}...</p>
+            </div>
+            <Palette className="w-8 h-8 text-purple-500" />
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">This Month</p>
+              <p className="text-2xl font-bold text-gray-900">Rp {(salesActivity.summary.totalRevenue || 0).toLocaleString('id-ID')}</p>
+            </div>
+            <Calendar className="w-8 h-8 text-orange-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RevenueChart data={revenueData} loading={chartsLoading} />
+        <SalesActivityChart data={salesActivity.dailyActivity} loading={chartsLoading} />
+      </div>
+
+      {/* Category and License Type Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CategoryBreakdownChart 
+          data={salesActivity.categoryBreakdown} 
+          loading={chartsLoading}
+          title="Sales by Category"
+        />
+        <CategoryBreakdownChart 
+          data={salesActivity.licenseTypeBreakdown} 
+          loading={chartsLoading}
+          title="Sales by License Type"
+        />
+      </div>
+
+      {/* Works Performance Table */}
+      <WorksPerformanceTable data={worksPerformance} loading={chartsLoading} />
+
       {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <h2 className="text-2xl font-bold text-structural mb-4">Quick Actions</h2>
+      <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <h2 className="text-xl font-bold text-structural mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link 
-            href="/dashboard/analytics"
+            href="/creator/analytics"
             className="p-4 border-2 border-gray-200 rounded-lg hover:border-primary transition-colors group"
           >
-            <h3 className="font-bold text-structural mb-2 group-hover:text-primary">
-              View Analytics
-            </h3>
+            <div className="flex items-center space-x-3 mb-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h3 className="font-bold text-structural group-hover:text-primary">
+                Detailed Analytics
+              </h3>
+            </div>
             <p className="text-sm text-gray-600">
-              Deep dive into your earnings and performance
+              Deep dive into performance metrics and trends
             </p>
           </Link>
           
@@ -168,75 +310,62 @@ export default function CreatorDashboard() {
             href="/creator/works"
             className="p-4 border-2 border-gray-200 rounded-lg hover:border-secondary transition-colors group"
           >
-            <h3 className="font-bold text-structural mb-2 group-hover:text-secondary">
-              Manage Works
-            </h3>
+            <div className="flex items-center space-x-3 mb-2">
+              <FileText className="w-5 h-5 text-secondary" />
+              <h3 className="font-bold text-structural group-hover:text-secondary">
+                Manage Works
+              </h3>
+            </div>
             <p className="text-sm text-gray-600">
-              Edit licenses and view work performance
+              Edit, update, and manage your creative works
             </p>
           </Link>
           
           <Link 
-            href="/dashboard/earnings"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-warning transition-colors group"
+            href="/creator/earnings"
+            className="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 transition-colors group"
           >
-            <h3 className="font-bold text-structural mb-2 group-hover:text-warning">
-              Withdraw Funds
-            </h3>
+            <div className="flex items-center space-x-3 mb-2">
+              <Wallet className="w-5 h-5 text-green-600" />
+              <h3 className="font-bold text-structural group-hover:text-green-600">
+                Withdraw Earnings
+              </h3>
+            </div>
             <p className="text-sm text-gray-600">
-              Transfer earnings to your bank account
+              Transfer your earnings to bank account
             </p>
           </Link>
         </div>
       </div>
 
-      {/* Recent Works */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-structural">Recent Works</h2>
-          <Link 
-            href="/creator/works"
-            className="text-primary font-semibold hover:underline"
-          >
-            View All →
-          </Link>
-        </div>
-        
-        {recentWorks.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">No works yet. Upload your first creative work!</p>
+      {/* Recent Works Summary */}
+      {recentWorks.length > 0 && (
+        <div className="bg-white p-6 rounded-xl border border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-structural">Recent Works</h2>
             <Link 
-              href="/creator/works/new"
-              className="bg-primary text-structural px-6 py-2 rounded-lg font-semibold hover:opacity-80 inline-block"
+              href="/creator/works"
+              className="text-primary font-semibold hover:underline"
             >
-              Upload Now
+              View All →
             </Link>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {recentWorks.map((work) => {
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentWorks.slice(0, 3).map((work) => {
               const isImage = isImageUrl(work.file_url);
               const iconName = getCategoryIcon(work.category);
-
-              // Map icon names to components
-              const iconComponents = {
-                Music,
-                Palette,
-                Camera,
-                FileText
-              };
-
+              const iconComponents = { Music, Palette, Camera, FileText };
               const IconComponent = iconComponents[iconName] || FileText;
 
               return (
                 <Link
                   key={work.id}
                   href={`/creator/works/${work.id}`}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors"
+                  className="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-base rounded-lg flex items-center justify-center overflow-hidden">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-base rounded-lg flex items-center justify-center overflow-hidden">
                       {work.file_url && isImage ? (
                         <img
                           src={work.file_url}
@@ -244,23 +373,47 @@ export default function CreatorDashboard() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <IconComponent className="w-8 h-8 text-gray-400" />
+                        <IconComponent className="w-6 h-6 text-gray-400" />
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-structural">{work.title}</h3>
-                      <p className="text-sm text-gray-600">{work.category}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">{work.title}</h3>
+                      <p className="text-sm text-gray-500">{work.category}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-structural">{work.license_count || 0} Licenses</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{work.license_count} sales</span>
+                    <span className="font-semibold">Rp {work.total_revenue.toLocaleString('id-ID')}</span>
                   </div>
                 </Link>
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Empty State for New Users */}
+      {recentWorks.length === 0 && (
+        <div className="bg-white p-12 rounded-xl border border-gray-200 text-center">
+          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to CreativeChain!</h3>
+          <p className="text-gray-600 mb-6">Start by uploading your first creative work to see analytics and earn from your creativity.</p>
+          <div className="flex justify-center space-x-4">
+            <Link 
+              href="/creator/works/new"
+              className="bg-primary text-structural px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            >
+              Upload Your First Work
+            </Link>
+            <Link 
+              href="/marketplace"
+              className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Explore Marketplace
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
