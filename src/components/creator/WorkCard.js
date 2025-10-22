@@ -57,11 +57,12 @@ export default function WorkCard({ work, onRefresh }) {
 
         <div className="flex items-center justify-between">
           <span className={`px-2 py-1 rounded text-xs font-medium ${
-            work.status === 'published' ? 'bg-green-100 text-green-800' :
-            work.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-            'bg-yellow-100 text-yellow-800'
+            work.category === 'music' ? 'bg-purple-100 text-purple-800' :
+            work.category === 'art' ? 'bg-blue-100 text-blue-800' :
+            work.category === 'photography' ? 'bg-green-100 text-green-800' :
+            'bg-gray-100 text-gray-800'
           }`}>
-            {work.status || 'draft'}
+            {work.category || 'other'}
           </span>
           
           <div className="flex gap-2">
@@ -69,13 +70,7 @@ export default function WorkCard({ work, onRefresh }) {
               href={`/creator/works/${work.id}/configure`}
               className="text-xs text-primary hover:text-primary/80 font-medium"
             >
-              Configure
-            </Link>
-            <Link
-              href={`/creator/works/${work.id}/edit`}
-              className="text-xs text-gray-600 hover:text-gray-900 font-medium"
-            >
-              Edit
+              Configure Licenses
             </Link>
           </div>
         </div>
