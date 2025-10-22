@@ -60,10 +60,17 @@ export async function POST(request) {
       }
     );
 
-    // Find the corresponding order in the database with license offering details
+    // Find the corresponding order with license offering and creative work details
     const { data: order, error: fetchError } = await supabaseAdmin
       .from('orders')
-      .select('*, license_offerings(*)')
+      .select(`
+        *,
+        license_offerings(*,
+          creative_works(id, title, creator_id,
+            profiles:creator_id(full_name, username)
+          )
+        )
+      `)
       .eq('id', orderId)
       .single();
 
@@ -138,30 +145,66 @@ export async function POST(request) {
 
     console.log(`Order ${orderId} status updated to 'paid' successfully`);
 
-    // Create license record for the completed order
-    const licenseData = {
-      work_id: order.license_offerings.work_id,
-      buyer_id: order.buyer_id,
-      license_type: order.license_offerings.license_type,
-      price_bidr: order.amount_idr, // TODO: Implement real currency conversion from IDR to USDT
-      transaction_hash: order.id, // Using order UUID as transaction hash for now
-      order_id: order.id,
-      license_offering_id: order.license_offering_id
-    };
+    // ==========================================
+    // MINT LICENSE NFT ON BLOCKCHAIN
+    // ==========================================
 
-    const { data: newLicense, error: licenseError } = await supabaseAdmin
-      .from('licenses')
-      .insert(licenseData)
-      .select()
-      .single();
+    console.log(`Initiating blockchain minting for order ${orderId}...`);
 
-    if (licenseError) {
-      console.error('Error creating license:', licenseError);
-      // Note: Order is already marked as paid, so we log the error but don't fail the webhook
-      console.log(`Order ${orderId} was marked as paid but license creation failed`);
-    } else {
-      console.log(`License created successfully for order ${orderId}:`, newLicense.id);
-      // TODO: Initiate blockchain minting for the new license ID
+    // Extract creative work and creator details
+    const creativeWork = order.license_offerings.creative_works;
+    const workTitle = creativeWork?.title || order.license_offerings.title || 'Creative Work';
+    const creatorProfile = creativeWork?.profiles;
+    const creatorName = creatorProfile?.full_name || creatorProfile?.username || 'Creator';
+
+    try {
+      // Call the mint-license API endpoint
+      const mintResponse = await fetch(new URL('/api/blockchain/mint-license', request.url), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          buyerUserId: order.buyer_id,
+          workId: order.license_offerings.work_id,
+          licenseOfferingId: order.license_offering_id,
+          orderId: order.id,
+          licenseType: order.license_offerings.license_type,
+          workTitle: workTitle,
+          creatorName: creatorName,
+          terms: order.license_offerings.terms || 'Standard license terms apply',
+          expiryDate: order.license_offerings.duration_days
+            ? new Date(Date.now() + order.license_offerings.duration_days * 24 * 60 * 60 * 1000).toISOString()
+            : null,
+          usageLimit: order.license_offerings.usage_limit || null,
+          priceBidr: order.amount_bidr,
+          transactionHash: order.id // Payment transaction reference (order ID)
+        })
+      });
+
+      const mintResult = await mintResponse.json();
+
+      if (!mintResponse.ok || !mintResult.success) {
+        throw new Error(mintResult.message || 'License minting failed');
+      }
+
+      console.log(`License minted successfully for order ${orderId}:`, {
+        licenseId: mintResult.licenseId,
+        tokenId: mintResult.tokenId,
+        transactionHash: mintResult.transactionHash
+      });
+
+    } catch (mintError) {
+      console.error(`Blockchain minting failed for order ${orderId}:`, mintError);
+
+      // Order is already marked as paid, so we log the error but don't fail the webhook
+      // The license record was created by the mint-license API, but without blockchain data
+      console.log(`Order ${orderId} was marked as paid but blockchain minting failed`);
+
+      // Note: In production, you might want to:
+      // 1. Create a failed_blockchain_transactions record for retry
+      // 2. Send notification to admin
+      // 3. Update order with error status
     }
 
     // Return success response
