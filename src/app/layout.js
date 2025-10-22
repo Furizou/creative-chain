@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
         className={`${outfit.variable} ${inter.variable} antialiased bg-base h-full flex flex-col`}
       >
         <Navbar />
-        <main className="pt-6 flex-1">
+        <main className="pt-16 flex-1">
           <ThirdwebProvider>
             {children}
           </ThirdwebProvider>
