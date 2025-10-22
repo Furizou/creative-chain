@@ -66,7 +66,7 @@ export default function WorkDetailPage() {
       
       if (result.success) {
         // Redirect to success page or show success message
-        router.push(`/dashboard/licenses/${result.license.license_id}`);
+        router.push(`/creator/licenses/${result.license.license_id}`);
       } else {
         throw new Error(result.error || 'Purchase failed');
       }

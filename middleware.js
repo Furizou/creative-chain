@@ -33,7 +33,7 @@ export async function middleware(req) {
   const { data: { session } } = await supabase.auth.getSession();
 
   // Protect authenticated routes - redirect unauthenticated users to login
-  const protectedPagePaths = ['/upload', '/dashboard', '/creator', '/profile'];
+  const protectedPagePaths = ['/upload', '/creator', '/profile'];
   const path = req.nextUrl.pathname;
 
   // Check if this is a protected page (not API route)
@@ -52,7 +52,7 @@ export const config = {
   matcher: [
     // Protect these pages (require login to access)
     '/upload',
-    '/dashboard/:path*',
+    '/creator/:path*',
     '/creator/:path*',
     '/profile/:path*',
   ],
