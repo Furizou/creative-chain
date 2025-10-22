@@ -508,14 +508,23 @@ By purchasing this license, you agree to these terms and conditions.`
         split_percentage: s.split_percentage
       }));
 
+      // Convert empty strings to null for numeric fields
+      const formData = {
+        work_id: workId,
+        license_type: form.license_type,
+        title: form.title,
+        description: form.description,
+        price_idr: form.price_idr ? Number(form.price_idr) : null,
+        usage_limit: form.usage_limit ? Number(form.usage_limit) : null,
+        duration_days: form.duration_days ? Number(form.duration_days) : null,
+        terms: form.terms,
+        royalty_splits: royaltySplitsData
+      };
+
       const res = await fetch("/api/license-offerings/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          work_id: workId,
-          ...form,
-          royalty_splits: royaltySplitsData
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
