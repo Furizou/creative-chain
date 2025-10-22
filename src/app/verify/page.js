@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 /**
  * Blockchain Verification Page
@@ -11,11 +12,34 @@ import { useState } from 'react';
  * - Certificate ID
  */
 export default function VerifyPage() {
+  const searchParams = useSearchParams();
   const [searchType, setSearchType] = useState('tx');
   const [searchValue, setSearchValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [verificationResult, setVerificationResult] = useState(null);
+
+  // Autofill from URL parameters
+  useEffect(() => {
+    const txHash = searchParams.get('txHash');
+    const tokenId = searchParams.get('tokenId');
+    const workHash = searchParams.get('workHash');
+    const certificateId = searchParams.get('certificateId');
+
+    if (txHash) {
+      setSearchType('tx');
+      setSearchValue(txHash);
+    } else if (tokenId) {
+      setSearchType('tokenId');
+      setSearchValue(tokenId);
+    } else if (workHash) {
+      setSearchType('workHash');
+      setSearchValue(workHash);
+    } else if (certificateId) {
+      setSearchType('certificateId');
+      setSearchValue(certificateId);
+    }
+  }, [searchParams]);
 
   const searchTypes = [
     { value: 'tx', label: 'Transaction Hash', placeholder: '0x...' },
