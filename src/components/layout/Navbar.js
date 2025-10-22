@@ -1,412 +1,443 @@
 "use client";
 
+
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
+
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const { user, profile, loading, signOut, isAuthenticated } = useAuth();
+ const [isScrolled, setIsScrolled] = useState(false);
+ const [showMobileMenu, setShowMobileMenu] = useState(false);
+ const [showUserMenu, setShowUserMenu] = useState(false);
+ const [isMounted, setIsMounted] = useState(false);
+ const { user, profile, loading, signOut, isAuthenticated } = useAuth();
 
-  // Prevent hydration errors by only rendering auth-dependent content after mount
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
-    };
+ // Prevent hydration errors by only rendering auth-dependent content after mount
+ useEffect(() => {
+   setIsMounted(true);
+ }, []);
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
-    setShowUserMenu(false);
-  };
+ useEffect(() => {
+   const handleScroll = () => {
+     setIsScrolled(window.scrollY > 100);
+   };
 
-  const AuthButtons = ({ compact = false }) => {
-    // Show loading skeleton during SSR and initial client load
-    if (!isMounted || loading) {
-      return (
-        <div className={`${compact ? 'px-4 py-1.5' : 'px-4 py-2'} bg-gray-600 rounded-lg animate-pulse`}>
-          <div className="w-16 h-4 bg-gray-500 rounded"></div>
-        </div>
-      );
-    }
 
-    if (isAuthenticated) {
-      return (
-        <div className="relative">
-          <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            className={`flex items-center space-x-3 ${compact ? 'text-sm' : ''} hover:text-primary transition-colors group`}
-          >
-            <div className="relative">
-              <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
-                {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-              </div>
-              {/* Online indicator */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-structural rounded-full"></div>
-            </div>
-            <div className="hidden sm:flex flex-col items-start">
-              <span className="font-semibold text-sm leading-tight">
-                {profile?.username || profile?.full_name || 'User'}
-              </span>
-              <span className="text-xs text-gray-300 leading-tight">
-                Creator
-              </span>
-            </div>
-            <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+   window.addEventListener("scroll", handleScroll);
+   return () => window.removeEventListener("scroll", handleScroll);
+ }, []);
 
-          {showUserMenu && (
-            <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-100">
-              {/* User Info Header */}
-              <div className="px-4 py-3 border-b border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
-                    {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{profile?.full_name || profile?.username || 'User'}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Creator Tools Section */}
-              <div className="py-2">
-                <div className="px-4 py-1">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Creator Tools</p>
-                </div>
-                <Link href="/creator" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Dashboard
-                </Link>
-                <Link href="/creator/works" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  My Works
-                </Link>
-                <Link href="/creator/analytics" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Analytics
-                </Link>
-                <Link href="/creator/earnings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  Earnings
-                </Link>
-              </div>
 
-              {/* Account Section */}
-              <div className="border-t border-gray-100 py-2">
-                <div className="px-4 py-1">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</p>
-                </div>
-                <Link href="/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Profile Settings
-                </Link>
-                <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Settings
-                </Link>
-              </div>
+ const handleSignOut = async () => {
+   await signOut();
+   setShowUserMenu(false);
+ };
 
-              {/* Sign Out */}
-              <div className="border-t border-gray-100 pt-2">
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
 
-    return (
-      <div className={`flex items-center ${compact ? 'space-x-2' : 'space-x-4'}`}>
-        <Link href="/login">
-          <button className={`text-white hover:text-primary transition-colors font-semibold ${compact ? 'text-sm' : ''}`}>
-            Login
-          </button>
-        </Link>
-        <Link href="/signup">
-          <button className={`bg-primary text-structural ${compact ? 'px-4 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-semibold hover:opacity-90 transition-opacity`}>
-            Get Started
-          </button>
-        </Link>
-      </div>
-    );
-  };
+ const AuthButtons = ({ compact = false }) => {
+   // Show loading skeleton during SSR and initial client load
+   if (!isMounted || loading) {
+     return (
+       <div className={`${compact ? 'px-4 py-1.5' : 'px-4 py-2'} bg-gray-600 rounded-lg animate-pulse`}>
+         <div className="w-16 h-4 bg-gray-500 rounded"></div>
+       </div>
+     );
+   }
 
-  return (
-    <>
-      {/* Original Navbar */}
-      <nav className="bg-structural text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="bg-primary text-structural px-3 py-1 rounded font-black text-xl">
-                CC
-              </div>
-              <span className="font-heading font-bold text-xl">CreativeChain</span>
-            </Link>
 
-            {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-8">
-              {!isMounted || !isAuthenticated ? (
-                // Guest navigation (also shown during SSR to prevent hydration errors)
-                <>
-                  <Link href="/" className="hover:text-primary transition-colors font-body">
-                    Home
-                  </Link>
-                  <Link href="/branding" className="hover:text-primary transition-colors font-body">
-                    Branding
-                  </Link>
-                  <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
-                    Marketplace
-                  </Link>
-                  <Link href="/verify" className="hover:text-primary transition-colors font-body">
-                    Verify
-                  </Link>
-                </>
-              ) : (
-                // Logged in user navigation (only shown after mount)
-                <>
-                  <Link href="/creator" className="hover:text-primary transition-colors font-body">
-                    Dashboard
-                  </Link>
-                  <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
-                    Marketplace
-                  </Link>
-                  <Link href="/creator/works" className="hover:text-primary transition-colors font-body">
-                    My Works
-                  </Link>
-                  <Link href="/creator/analytics" className="hover:text-primary transition-colors font-body">
-                    Analytics
-                  </Link>
-                  <Link href="/verify" className="hover:text-primary transition-colors font-body">
-                    Verify
-                  </Link>
-                </>
-              )}
-            </div>
+   if (isAuthenticated) {
+     return (
+       <div className="relative">
+         <button
+           onClick={() => setShowUserMenu(!showUserMenu)}
+           className={`flex items-center space-x-3 ${compact ? 'text-sm' : ''} hover:text-primary transition-colors group`}
+         >
+           <div className="relative">
+             <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+               {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+             </div>
+             {/* Online indicator */}
+             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-structural rounded-full"></div>
+           </div>
+           <div className="hidden sm:flex flex-col items-start">
+             <span className="font-semibold text-sm leading-tight">
+               {profile?.username || profile?.full_name || 'User'}
+             </span>
+             <span className="text-xs text-gray-300 leading-tight">
+               Creator
+             </span>
+           </div>
+           <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+           </svg>
+         </button>
 
-            {/* Auth Buttons */}
-            <div className="hidden md:flex items-center">
-              <AuthButtons />
-            </div>
 
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden text-white"
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
+         {showUserMenu && (
+           <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-100">
+             {/* User Info Header */}
+             <div className="px-4 py-3 border-b border-gray-100">
+               <div className="flex items-center space-x-3">
+                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
+                   {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                 </div>
+                 <div className="flex-1">
+                   <p className="text-sm font-semibold text-gray-900">{profile?.full_name || profile?.username || 'User'}</p>
+                   <p className="text-xs text-gray-500">{user?.email}</p>
+                 </div>
+               </div>
+             </div>
+            
+             {/* Creator Tools Section */}
+             <div className="py-2">
+               <div className="px-4 py-1">
+                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Creator Tools</p>
+               </div>
+               <Link href="/dashboard" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                 </svg>
+                 Dashboard
+               </Link>
+               <Link href="/creator/works" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                 </svg>
+                 My Works
+               </Link>
+               <Link href="/dashboard/analytics" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                 </svg>
+                 Analytics
+               </Link>
+               <Link href="/creator/earnings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                 </svg>
+                 Earnings
+               </Link>
+               <Link href="/dashboard/licenses" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                 </svg>
+                 My Licenses
+               </Link>
+             </div>
 
-          {/* Mobile Menu */}
-          {showMobileMenu && (
-            <div className="md:hidden bg-structural border-t border-gray-700">
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                {!isMounted || !isAuthenticated ? (
-                  // Guest mobile menu (also shown during SSR to prevent hydration errors)
-                  <>
-                    <Link href="/" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      Home
-                    </Link>
-                    <Link href="/branding" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      Branding
-                    </Link>
-                    <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      Marketplace
-                    </Link>
-                    <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      Verify
-                    </Link>
-                    <div className="px-3 py-2 space-y-2 border-t border-gray-700 mt-4 pt-4">
-                      <Link href="/login" className="block">
-                        <button className="w-full text-white border border-white px-4 py-2 rounded-lg hover:bg-white hover:text-structural transition-colors">
-                          Login
-                        </button>
-                      </Link>
-                      <Link href="/signup" className="block">
-                        <button className="w-full bg-primary text-structural px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
-                          Get Started
-                        </button>
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  // Logged in mobile menu
-                  <>
-                    {/* User info */}
-                    <div className="px-3 py-3 border-b border-gray-700 mb-2">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
-                          {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                        </div>
-                        <div>
-                          <p className="text-white font-semibold text-sm">{profile?.full_name || profile?.username || 'User'}</p>
-                          <p className="text-gray-300 text-xs">{user?.email}</p>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Navigation */}
-                    <Link href="/creator" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Dashboard
-                      </span>
-                    </Link>
-                    <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        Marketplace
-                      </span>
-                    </Link>
-                    <Link href="/creator/works" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        My Works
-                      </span>
-                    </Link>
-                    <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Verify
-                      </span>
-                    </Link>
-                    <Link href="/profile" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Profile
-                      </span>
-                    </Link>
-                    <button 
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-3 py-2 text-red-400 hover:text-red-300 transition-colors border-t border-gray-700 mt-4 pt-4"
-                    >
-                      <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign Out
-                      </span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+             {/* Account Section */}
+             <div className="border-t border-gray-100 py-2">
+               <div className="px-4 py-1">
+                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</p>
+               </div>
+               <Link href="/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                 </svg>
+                 Profile Settings
+               </Link>
+               <Link href="/settings" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                 <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                 </svg>
+                 Settings
+               </Link>
+             </div>
 
-      {/* Floating Navbar - appears when scrolled */}
-      <div
-        className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${
-          isScrolled ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
-      >
-        <div className="bg-structural text-white shadow-2xl rounded-full px-6 py-3 flex items-center space-x-6 backdrop-blur-sm bg-opacity-95">
-          {/* Compact Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="bg-primary text-structural px-2 py-1 rounded font-black text-sm">
-              CC
-            </div>
-            <span className="font-heading font-bold text-sm hidden sm:inline">CreativeChain</span>
-          </Link>
 
-          {/* Compact Navigation */}
-          <div className="flex items-center space-x-4 text-sm">
-            {!isMounted || !isAuthenticated ? (
-              <>
-                <Link href="/" className="hover:text-primary transition-colors">
-                  Home
-                </Link>
-                <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
-                  Market
-                </Link>
-                <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
-                  Verify
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/creator" className="hover:text-primary transition-colors">
-                  Dashboard
-                </Link>
-                <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
-                  Market
-                </Link>
-                <Link href="/creator/works" className="hover:text-primary transition-colors hidden sm:inline">
-                  Works
-                </Link>
-                <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
-                  Verify
-                </Link>
-              </>
-            )}
-          </div>
+             {/* Sign Out */}
+             <div className="border-t border-gray-100 pt-2">
+               <button
+                 onClick={handleSignOut}
+                 className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+               >
+                 <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                 </svg>
+                 Sign Out
+               </button>
+             </div>
+           </div>
+         )}
+       </div>
+     );
+   }
 
-          {/* Compact Auth */}
-          <AuthButtons compact />
-        </div>
-      </div>
 
-      {/* Click outside to close menus */}
-      {(showMobileMenu || showUserMenu) && (
-        <div 
-          className="fixed inset-0 z-30" 
-          onClick={() => {
-            setShowMobileMenu(false);
-            setShowUserMenu(false);
-          }}
-        />
-      )}
-    </>
-  );
+   return (
+     <div className={`flex items-center ${compact ? 'space-x-2' : 'space-x-4'}`}>
+       <Link href="/login">
+         <button className={`text-white hover:text-primary transition-colors font-semibold ${compact ? 'text-sm' : ''}`}>
+           Login
+         </button>
+       </Link>
+       <Link href="/signup">
+         <button className={`bg-primary text-structural ${compact ? 'px-4 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-semibold hover:opacity-90 transition-opacity`}>
+           Get Started
+         </button>
+       </Link>
+     </div>
+   );
+ };
+
+
+ return (
+   <>
+     {/* Original Navbar */}
+     <nav className="bg-structural text-white shadow-lg">
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+         <div className="flex justify-between items-center h-16">
+           {/* Logo */}
+           <Link href="/" className="flex items-center space-x-2">
+             <div className="bg-primary text-structural px-3 py-1 rounded font-black text-xl">
+               CC
+             </div>
+             <span className="font-heading font-bold text-xl">CreativeChain</span>
+           </Link>
+
+
+           {/* Navigation Links */}
+           <div className="hidden md:flex items-center space-x-8">
+             {!isMounted || !isAuthenticated ? (
+               // Guest navigation (also shown during SSR to prevent hydration errors)
+               <>
+                 <Link href="/" className="hover:text-primary transition-colors font-body">
+                   Home
+                 </Link>
+                 <Link href="/branding" className="hover:text-primary transition-colors font-body">
+                   Branding
+                 </Link>
+                 <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
+                   Marketplace
+                 </Link>
+                 <Link href="/verify" className="hover:text-primary transition-colors font-body">
+                   Verify
+                 </Link>
+               </>
+             ) : (
+               // Logged in user navigation (only shown after mount)
+               <>
+                 <Link href="/creator" className="hover:text-primary transition-colors font-body">
+                   Dashboard
+                 </Link>
+                 <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
+                   Marketplace
+                 </Link>
+                 <Link href="/creator/works" className="hover:text-primary transition-colors font-body">
+                   My Works
+                 </Link>
+                 <Link href="/creator/analytics" className="hover:text-primary transition-colors font-body">
+                   Analytics
+                 </Link>
+                 <Link href="/verify" className="hover:text-primary transition-colors font-body">
+                   Verify
+                 </Link>
+               </>
+             )}
+           </div>
+
+
+           {/* Auth Buttons */}
+           <div className="hidden md:flex items-center">
+             <AuthButtons />
+           </div>
+
+
+           {/* Mobile Menu Button */}
+           <button
+             className="md:hidden text-white"
+             onClick={() => setShowMobileMenu(!showMobileMenu)}
+           >
+             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+             </svg>
+           </button>
+         </div>
+
+
+         {/* Mobile Menu */}
+         {showMobileMenu && (
+           <div className="md:hidden bg-structural border-t border-gray-700">
+             <div className="px-2 pt-2 pb-3 space-y-1">
+               {!isMounted || !isAuthenticated ? (
+                 // Guest mobile menu (also shown during SSR to prevent hydration errors)
+                 <>
+                   <Link href="/" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     Home
+                   </Link>
+                   <Link href="/branding" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     Branding
+                   </Link>
+                   <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     Marketplace
+                   </Link>
+                   <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     Verify
+                   </Link>
+                   <div className="px-3 py-2 space-y-2 border-t border-gray-700 mt-4 pt-4">
+                     <Link href="/login" className="block">
+                       <button className="w-full text-white border border-white px-4 py-2 rounded-lg hover:bg-white hover:text-structural transition-colors">
+                         Login
+                       </button>
+                     </Link>
+                     <Link href="/signup" className="block">
+                       <button className="w-full bg-primary text-structural px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                         Get Started
+                       </button>
+                     </Link>
+                   </div>
+                 </>
+               ) : (
+                 // Logged in mobile menu
+                 <>
+                   {/* User info */}
+                   <div className="px-3 py-3 border-b border-gray-700 mb-2">
+                     <div className="flex items-center space-x-3">
+                       <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
+                         {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                       </div>
+                       <div>
+                         <p className="text-white font-semibold text-sm">{profile?.full_name || profile?.username || 'User'}</p>
+                         <p className="text-gray-300 text-xs">{user?.email}</p>
+                       </div>
+                     </div>
+                   </div>
+
+
+                   {/* Navigation */}
+                   <Link href="/creator" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     <span className="flex items-center">
+                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                       </svg>
+                       Dashboard
+                     </span>
+                   </Link>
+                   <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     <span className="flex items-center">
+                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                       </svg>
+                       Marketplace
+                     </span>
+                   </Link>
+                   <Link href="/creator/works" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     <span className="flex items-center">
+                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                       </svg>
+                       My Works
+                     </span>
+                   </Link>
+                   <Link href="/verify" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     <span className="flex items-center">
+                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                       </svg>
+                       Verify
+                     </span>
+                   </Link>
+                   <Link href="/profile" className="block px-3 py-2 text-white hover:text-primary transition-colors">
+                     <span className="flex items-center">
+                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                       </svg>
+                       Profile
+                     </span>
+                   </Link>
+                   <button
+                     onClick={handleSignOut}
+                     className="block w-full text-left px-3 py-2 text-red-400 hover:text-red-300 transition-colors border-t border-gray-700 mt-4 pt-4"
+                   >
+                     <span className="flex items-center">
+                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                       </svg>
+                       Sign Out
+                     </span>
+                   </button>
+                 </>
+               )}
+             </div>
+           </div>
+         )}
+       </div>
+     </nav>
+
+
+     {/* Floating Navbar - appears when scrolled */}
+     <div
+       className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${
+         isScrolled ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+       }`}
+     >
+       <div className="bg-structural text-white shadow-2xl rounded-full px-6 py-3 flex items-center space-x-6 backdrop-blur-sm bg-opacity-95">
+         {/* Compact Logo */}
+         <Link href="/" className="flex items-center space-x-2">
+           <div className="bg-primary text-structural px-2 py-1 rounded font-black text-sm">
+             CC
+           </div>
+           <span className="font-heading font-bold text-sm hidden sm:inline">CreativeChain</span>
+         </Link>
+
+
+         {/* Compact Navigation */}
+         <div className="flex items-center space-x-4 text-sm">
+           {!isMounted || !isAuthenticated ? (
+             <>
+               <Link href="/" className="hover:text-primary transition-colors">
+                 Home
+               </Link>
+               <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
+                 Market
+               </Link>
+               <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
+                 Verify
+               </Link>
+             </>
+           ) : (
+             <>
+               <Link href="/creator" className="hover:text-primary transition-colors">
+                 Dashboard
+               </Link>
+               <Link href="/marketplace" className="hover:text-primary transition-colors hidden sm:inline">
+                 Market
+               </Link>
+               <Link href="/creator/works" className="hover:text-primary transition-colors hidden sm:inline">
+                 Works
+               </Link>
+               <Link href="/verify" className="hover:text-primary transition-colors hidden sm:inline">
+                 Verify
+               </Link>
+             </>
+           )}
+         </div>
+
+
+         {/* Compact Auth */}
+         <AuthButtons compact />
+       </div>
+     </div>
+
+
+     {/* Click outside to close menus */}
+     {(showMobileMenu || showUserMenu) && (
+       <div
+         className="fixed inset-0 z-30"
+         onClick={() => {
+           setShowMobileMenu(false);
+           setShowUserMenu(false);
+         }}
+       />
+     )}
+   </>
+ );
 }
+
+
+
