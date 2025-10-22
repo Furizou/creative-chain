@@ -205,7 +205,7 @@ function CheckoutPageContent({ params }) {
               <p className="text-gray-600 mb-6">{error}</p>
               <button
                 onClick={() => router.back()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                className="bg-primary text-structural px-6 py-2 rounded-md hover:opacity-80 transition duration-200"
               >
                 Go Back
               </button>
@@ -221,9 +221,9 @@ function CheckoutPageContent({ params }) {
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
-          <div className="bg-blue-600 text-white px-8 py-6">
+          <div className="bg-primary text-structural px-8 py-6">
             <h1 className="text-3xl font-bold">Confirm Your Order</h1>
-            <p className="text-blue-100 mt-2">Review your purchase before proceeding to payment</p>
+            <p className="text-yellow-100 mt-2">Review your purchase before proceeding to payment</p>
           </div>
 
           {/* Order Summary */}
@@ -241,7 +241,7 @@ function CheckoutPageContent({ params }) {
                   </p>
                 )}
                 {workData?.category && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                     {workData.category}
                   </span>
                 )}
@@ -264,7 +264,7 @@ function CheckoutPageContent({ params }) {
                 {/* Price Display */}
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                   <span className="text-gray-700 font-medium">License Price:</span>
-                  <span className="text-2xl font-bold text-blue-600">
+                  <span className="text-2xl font-bold text-primary">
                     {licenseOffering?.price_idr ? formatPrice(licenseOffering.price_idr) : 'Loading...'}
                   </span>
                 </div>
@@ -305,7 +305,7 @@ function CheckoutPageContent({ params }) {
               <button
                 onClick={handleConfirmPayment}
                 disabled={isProcessing || !workData || !licenseOffering}
-                className="flex-2 bg-blue-600 text-white py-3 px-8 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200"
+                className="flex-2 bg-primary text-structural py-3 px-8 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center">

@@ -551,7 +551,7 @@ By purchasing this license, you agree to these terms and conditions.`
         <button
           type="button"
           onClick={() => setTemplateOpen(true)}
-          className="px-4 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 font-medium text-sm border border-blue-200"
+          className="px-4 py-2 bg-orange-100 text-orange-400 rounded hover:bg-orange-200 font-medium text-sm border border-yellow-200"
         >
           📋 Choose License Template
         </button>
@@ -564,7 +564,7 @@ By purchasing this license, you agree to these terms and conditions.`
               </p>
               <div className="space-y-3">
                 {licenseTemplates.map((t) => (
-                  <div key={t.id} className="border border-gray-200 p-4 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                  <div key={t.id} className="border border-gray-200 p-4 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="font-semibold text-lg mb-1">{t.title}</div>
@@ -574,7 +574,7 @@ By purchasing this license, you agree to these terms and conditions.`
                             Price: Rp {Number(t.price_idr).toLocaleString('id-ID')}
                           </span>
                           {t.duration_days && (
-                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                            <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
                               Duration: {t.duration_days} days
                             </span>
                           )}
@@ -610,7 +610,7 @@ By purchasing this license, you agree to these terms and conditions.`
                           }));
                           setTemplateOpen(false);
                         }}
-                        className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+                        className="ml-4 px-4 py-2 bg-primary text-structural rounded hover:opacity-80 whitespace-nowrap"
                       >
                         Use Template
                       </button>
@@ -643,7 +643,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="e.g., Personal, Commercial, Editorial"
             value={form.license_type}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             required
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -661,7 +661,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="e.g., Standard Commercial License"
             value={form.title}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             required
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -679,7 +679,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="Describe what this license includes and any restrictions..."
             value={form.description}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             rows="3"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -697,7 +697,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="e.g., 50000"
             value={form.price_idr}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             type="number"
             min="0"
             step="1"
@@ -718,7 +718,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="e.g., 100 (leave empty for unlimited)"
             value={form.usage_limit}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             type="number"
             min="0"
           />
@@ -737,7 +737,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="e.g., 365 (leave empty for perpetual)"
             value={form.duration_days}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             type="number"
             min="1"
           />
@@ -756,7 +756,7 @@ By purchasing this license, you agree to these terms and conditions.`
             placeholder="Enter the legal terms and conditions for this license..."
             value={form.terms}
             onChange={handleChange}
-            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
             rows="4"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -801,7 +801,7 @@ By purchasing this license, you agree to these terms and conditions.`
                       setSearchQuery("");
                       setSearchResults([]);
                     }}
-                    className="w-full text-left border border-gray-300 p-2 rounded bg-white hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full text-left border border-gray-300 p-2 rounded bg-white hover:bg-gray-50 focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
                     {split.recipient_name || split.recipient_address || "Click to select a user..."}
                   </button>
@@ -820,7 +820,7 @@ By purchasing this license, you agree to these terms and conditions.`
                             setSearchQuery(e.target.value);
                             searchUsers(e.target.value);
                           }}
-                          className="border border-gray-300 p-2 w-full rounded mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="border border-gray-300 p-2 w-full rounded mb-3 focus:ring-2 focus:ring-primary focus:border-transparent"
                           autoFocus
                         />
 
@@ -829,7 +829,7 @@ By purchasing this license, you agree to these terms and conditions.`
                             searchResults.map((user) => (
                               <div
                                 key={user.id}
-                                className="border border-gray-200 p-3 rounded hover:bg-blue-50 cursor-pointer"
+                                className="border border-gray-200 p-3 rounded hover:bg-yellow-50 cursor-pointer"
                                 onClick={() => selectUser(idx, user)}
                               >
                                 <div className="font-semibold text-sm">
@@ -890,7 +890,7 @@ By purchasing this license, you agree to these terms and conditions.`
                   step="0.01"
                   value={split.split_percentage}
                   onChange={(e) => handleRoyaltyChange(idx, e)}
-                  className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 w-full rounded focus:ring-2 focus:ring-primary focus:border-transparent"
                   required
                 />
               </div>
@@ -900,13 +900,13 @@ By purchasing this license, you agree to these terms and conditions.`
           <button
             type="button"
             onClick={addRoyaltySplit}
-            className="text-blue-600 text-sm hover:underline font-medium"
+            className="text-orange-400 text-sm hover:underline font-medium"
           >
             + Add Another Split
           </button>
 
           {/* Show total percentage */}
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-700">Total Percentage:</span>
               <span className={`text-sm font-bold ${
@@ -923,7 +923,7 @@ By purchasing this license, you agree to these terms and conditions.`
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-primary text-structural px-4 py-2 rounded"
         >
           {loading ? "Saving..." : "Save Configuration"}
         </button>
