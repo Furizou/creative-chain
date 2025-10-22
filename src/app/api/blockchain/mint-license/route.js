@@ -248,6 +248,25 @@ export async function POST(request) {
     } catch (mintError) {
       console.error('License minting failed:', mintError);
 
+      // Log failed transaction for admin monitoring
+      try {
+        await supabaseAdmin
+          .from('failed_blockchain_transactions')
+          .insert({
+            transaction_type: 'license',
+            error_code: mintError.code || 'MINTING_FAILED',
+            error_message: mintError.message,
+            user_id: buyerUserId,
+            work_id: workId,
+            order_id: orderId,
+            license_offering_id: licenseOfferingId,
+            request_payload: body,
+            retry_status: 'pending'
+          });
+      } catch (logError) {
+        console.error('Failed to log transaction error:', logError);
+      }
+
       return NextResponse.json(
         {
           success: false,

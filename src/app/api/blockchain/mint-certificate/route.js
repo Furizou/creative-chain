@@ -167,7 +167,24 @@ export async function POST(request) {
     } catch (mintError) {
       console.error('Minting failed:', mintError);
 
-      // Save failed attempt to database
+      // Log failed transaction for admin monitoring
+      try {
+        await supabaseAdmin
+          .from('failed_blockchain_transactions')
+          .insert({
+            transaction_type: 'copyright_certificate',
+            error_code: mintError.code || 'MINTING_FAILED',
+            error_message: mintError.message,
+            user_id: userId,
+            work_id: workId,
+            request_payload: body,
+            retry_status: 'pending'
+          });
+      } catch (logError) {
+        console.error('Failed to log transaction error:', logError);
+      }
+
+      // Save failed attempt to copyright_certificates table (for backwards compatibility)
       if (workId) {
         await supabaseAdmin
           .from('copyright_certificates')
