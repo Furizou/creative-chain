@@ -1,19 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
 export async function GET(request) {
+  const supabase = await createClient();
+  
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    
     // Get the authenticated user
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
+    console.log('Works Performance API - Session check:', {
+      hasSession: !!session,
+      sessionError: sessionError?.message,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email
+    });
+    
     if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('Works Performance API - No session:', sessionError);
+      return NextResponse.json({ error: 'Unauthorized', details: sessionError?.message || 'No session' }, { status: 401 });
     }
 
     const userId = session.user.id;
+    console.log('Works Performance API - Processing for user:', userId);
 
     // Get performance data for all works
     const { data: worksData, error: worksError } = await supabase

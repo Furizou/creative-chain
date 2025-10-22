@@ -85,10 +85,28 @@ export default function CreatorDashboard() {
 
   const fetchRevenueData = async () => {
     try {
-      const response = await fetch('/api/analytics/revenue-chart');
+      // Check current session first
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Client session before API call:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email
+      });
+      
+      const response = await fetch('/api/analytics/revenue-chart', {
+        credentials: 'include', // Ensure cookies are sent
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      console.log('Revenue chart response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('Revenue chart data:', data);
         setRevenueData(data);
+      } else {
+        const error = await response.text();
+        console.error('Revenue chart error:', error);
       }
     } catch (error) {
       console.error('Error fetching revenue data:', error);
@@ -98,9 +116,14 @@ export default function CreatorDashboard() {
   const fetchSalesActivity = async () => {
     try {
       const response = await fetch('/api/analytics/sales-activity');
+      console.log('Sales activity response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('Sales activity data:', data);
         setSalesActivity(data);
+      } else {
+        const error = await response.text();
+        console.error('Sales activity error:', error);
       }
     } catch (error) {
       console.error('Error fetching sales activity:', error);
@@ -110,9 +133,14 @@ export default function CreatorDashboard() {
   const fetchWorksPerformance = async () => {
     try {
       const response = await fetch('/api/analytics/works-performance');
+      console.log('Works performance response status:', response.status);
       if (response.ok) {
         const data = await response.json();
+        console.log('Works performance data:', data);
         setWorksPerformance(data);
+      } else {
+        const error = await response.text();
+        console.error('Works performance error:', error);
       }
     } catch (error) {
       console.error('Error fetching works performance:', error);
