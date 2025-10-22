@@ -99,33 +99,27 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async (demoType) => {
+  const handleDemoLogin = async () => {
     setIsLoading(true);
+    setMessage('');
     
-    // Generate unique request ID for client-side tracking
-    const clientRequestId = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log(`🔵 [CLIENT-${clientRequestId}] Starting demo login for: ${demoType}`);
+    console.log('🔵 Starting demo login...');
     
+    // Demo user credentials
     const demoCredentials = {
-      creator: { email: 'creator@demo.com', password: 'Demo123!' },
-      buyer: { email: 'buyer@demo.com', password: 'Demo123!' }
+      email: 'demo@creativechain.com',
+      password: 'Demo123!'
     };
 
     try {
-      const creds = demoCredentials[demoType];
-      console.log(`🔍 [CLIENT-${clientRequestId}] Demo credentials:`, {
-        email: creds.email,
-        hasPassword: !!creds.password
-      });
-
       // Use client-side Supabase to login directly
       const supabase = createClient();
 
-      console.log(`🔵 [CLIENT-${clientRequestId}] Attempting Supabase authentication`);
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword(creds);
+      console.log('🔵 Attempting Supabase authentication with demo credentials');
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword(demoCredentials);
 
       if (authError) {
-        console.error(`❌ [CLIENT-${clientRequestId}] Login failed:`, authError);
+        console.error('❌ Login failed:', authError);
         throw new Error(authError.message || 'Demo login failed');
       }
 
@@ -133,18 +127,14 @@ export default function LoginPage() {
         throw new Error('No session created');
       }
 
-      console.log(`✅ [CLIENT-${clientRequestId}] Demo login successful, redirecting to dashboard`);
-      // Don't set loading to false - we're redirecting
-      window.location.href = '/creator';
+      console.log('✅ Demo login successful, redirecting to dashboard');
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
 
     } catch (error) {
-      console.error(`❌ [CLIENT-${clientRequestId}] Demo login error:`, {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      console.error('❌ Demo login error:', error);
       setErrors({ submit: error.message });
-      setIsLoading(false); // Only stop loading on error
+      setIsLoading(false);
     }
   };
 
@@ -218,25 +208,16 @@ export default function LoginPage() {
         )}
       </form>
 
-      {/* Demo Accounts */}
+      {/* Demo Account */}
       <div className="mt-6 pt-4 border-t border-gray-200">
-        <h3 className="text-sm font-semibold text-structural mb-3 text-center">Demo Accounts</h3>
-        <div className="space-y-2">
-          <button
-            onClick={() => handleDemoLogin('creator')}
-            disabled={isLoading}
-            className="w-full bg-secondary text-white py-2.5 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-secondary/50 disabled:opacity-50 text-sm transition-all"
-          >
-            Login as Demo Creator
-          </button>
-          <button
-            onClick={() => handleDemoLogin('buyer')}
-            disabled={isLoading}
-            className="w-full bg-structural text-white py-2.5 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-structural/50 disabled:opacity-50 text-sm transition-all"
-          >
-            Login as Demo Buyer
-          </button>
-        </div>
+        <h3 className="text-sm font-semibold text-structural mb-3 text-center">Demo Account</h3>
+        <button
+          onClick={handleDemoLogin}
+          disabled={isLoading}
+          className="w-full bg-secondary text-white py-3 px-4 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-secondary/50 disabled:opacity-50 transition-all"
+        >
+          {isLoading ? 'Logging In...' : 'Login as Demo User'}
+        </button>
       </div>
 
       {/* Forgot Password */}
