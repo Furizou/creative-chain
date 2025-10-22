@@ -110,12 +110,12 @@ export default function MarketplacePage() {
       }
       
       startTransition(() => {
-        setWorks(data?.works || []);
+        setWorks(data?.data || []);
         setPagination({
-          total: data?.total || 0,
-          pages: data?.total_pages || 0,
-          hasNext: data?.has_next || false,
-          hasPrev: data?.has_prev || false
+          total: data?.pagination?.total_records || 0,
+          pages: data?.pagination?.total_pages || 0,
+          hasNext: data?.pagination?.has_next || false,
+          hasPrev: data?.pagination?.has_prev || false
         });
       });
     } catch (error) {
