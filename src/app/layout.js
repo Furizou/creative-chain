@@ -23,12 +23,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <body
-        className={`${outfit.variable} ${inter.variable} antialiased bg-base`}
+        className={`${outfit.variable} ${inter.variable} antialiased bg-base h-full flex flex-col`}
       >
         <Navbar />
-        <main className="pt-6">
+        <main className="pt-6 flex-1">
           <ThirdwebProvider>
             {children}
           </ThirdwebProvider>
