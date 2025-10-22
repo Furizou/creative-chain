@@ -17,8 +17,11 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "CreativeChain",
+  title: "SINAR",
   description: "Creative collaboration platform powered by blockchain",
+  icons: {
+    icon: "/logo/R_black.svg",
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -7,12 +8,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="bg-primary text-structural px-3 py-1 rounded font-black text-xl">
-                CC
-              </div>
-              <span className="font-heading font-bold text-xl">CreativeChain</span>
-            </div>
+            <Link href="/" className="inline-block">
+              <Image
+                src="/logo/logo_white.svg"
+                alt="SINAR Logo"
+                width={120}
+                height={32}
+                className="h-8 w-auto mb-4"
+              />
+            </Link>
             <p className="text-sm text-gray-300">
               Empowering creators through blockchain technology. Secure, transparent, and decentralized creative collaboration.
             </p>
@@ -88,7 +92,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-400">
-            © 2025 CreativeChain. All rights reserved.
+            © 2025 SINAR. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-primary transition-colors">

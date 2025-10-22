@@ -107,7 +107,7 @@ export default function LoginPage() {
     
     // Demo user credentials
     const demoCredentials = {
-      email: 'demo@creativechain.com',
+      email: 'demo@sinar.com',
       password: 'Demo123!'
     };
 
@@ -142,7 +142,7 @@ export default function LoginPage() {
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-black text-structural text-center">Welcome Back</h1>
-        <p className="text-structural/70 text-center mt-2">Sign in to your CreativeChain account</p>
+        <p className="text-structural/70 text-center mt-2">Sign in to your SINAR account</p>
       </div>
 
       {/* URL Message */}
