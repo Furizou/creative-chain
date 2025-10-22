@@ -1,15 +1,24 @@
 import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
 
 export async function GET(request) {
   try {
     const supabase = await createClient()
-    
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const category = searchParams.get('category')
+    const creator = searchParams.get('creator')
+    const minPrice = searchParams.get('min_price')
+    const maxPrice = searchParams.get('max_price')
+    const licenseType = searchParams.get('license_type')
+    const hasActiveLicense = searchParams.get('has_active_license')
+    const sortBy = searchParams.get('sort_by') || 'created_at'
+    const sortOrder = searchParams.get('sort_order') || 'desc'
     const sort = searchParams.get('sort') || 'latest'
     const page = parseInt(searchParams.get('page')) || 1
     const limit = 12
+    const offset = (page - 1) * limit
 
     // Build the base query
     let query = supabase
@@ -34,10 +43,11 @@ export async function GET(request) {
         ),
         copyright_certificates(
           id,
-          nft_token_id,
-          nft_contract_address,
+          token_id,
           transaction_hash,
-          blockchain_network,
+          wallet_address,
+          minting_status,
+          polygonscan_url,
           created_at
         ),
         license_offerings(
