@@ -162,9 +162,6 @@ export default function Navbar() {
                  <Link href="/" className="hover:text-primary transition-colors font-body">
                    Home
                  </Link>
-                 <Link href="/branding" className="hover:text-primary transition-colors font-body">
-                   Branding
-                 </Link>
                  <Link href="/marketplace" className="hover:text-primary transition-colors font-body">
                    Marketplace
                  </Link>
@@ -219,9 +216,6 @@ export default function Navbar() {
                  <>
                    <Link href="/" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                      Home
-                   </Link>
-                   <Link href="/branding" className="block px-3 py-2 text-white hover:text-primary transition-colors">
-                     Branding
                    </Link>
                    <Link href="/marketplace" className="block px-3 py-2 text-white hover:text-primary transition-colors">
                      Marketplace
