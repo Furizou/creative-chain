@@ -23,7 +23,7 @@ export default function EarningsPage(){
         const workIds = (works||[]).map(w=>w.id);
         if (workIds.length === 0) { setBalance(0); setRows([]); return; }
         const { data: licenses } = await supabase.from('licenses').select('*').in('work_id', workIds);
-        const total = (licenses||[]).reduce((s,l)=>s+Number(l.price_usdt||0),0);
+        const total = (licenses||[]).reduce((s,l)=>s+Number(l.price_bidr||0),0);
         setBalance(total);
         setRows(licenses||[]);
       }catch(err){
@@ -109,7 +109,7 @@ export default function EarningsPage(){
                 <tr key={r.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(r.purchased_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{r.work_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{Number(r.price_usdt||0).toFixed(2)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{Number(r.price_bidr||0).toFixed(2)}</td>
                 </tr>
               ))}
               {rows.length===0 && (

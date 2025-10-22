@@ -143,7 +143,7 @@ export async function POST(request) {
       work_id: order.license_offerings.work_id,
       buyer_id: order.buyer_id,
       license_type: order.license_offerings.license_type,
-      price_usdt: order.amount_idr, // TODO: Implement real currency conversion from IDR to USDT
+      price_bidr: order.amount_idr, // TODO: Implement real currency conversion from IDR to USDT
       transaction_hash: order.id, // Using order UUID as transaction hash for now
       order_id: order.id,
       license_offering_id: order.license_offering_id

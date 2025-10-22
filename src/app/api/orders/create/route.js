@@ -28,7 +28,7 @@ export async function POST(request) {
     if (session && session.user) {
       // 1. If a real session exists, use it.
       userId = session.user.id;
-      console.log(`Authenticated with real user session: ${userId}`);
+      console.log(`✅ Authenticated with real user session: ${userId}`);
     } else if (process.env.NODE_ENV === 'development') {
       // 2. If no session, but we are in development, use the mock ID as a fallback.
       userId = DEMO_BUYER_ID;
@@ -65,7 +65,13 @@ export async function POST(request) {
 
     // 2. Parse and validate input
     const body = await request.json();
-    const { license_offering_id } = body;
+    const { license_offering_id, user_id: clientUserId } = body;
+
+    // If no session but client provided user_id, use it (with caution - only in development)
+    if (!userId && clientUserId && process.env.NODE_ENV === 'development') {
+      userId = clientUserId;
+      console.log('⚠️ Using user_id from client request body (development only):', userId);
+    }
 
     if (!license_offering_id) {
       return NextResponse.json(

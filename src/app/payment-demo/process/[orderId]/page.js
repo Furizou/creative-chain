@@ -77,7 +77,7 @@ export default function PaymentProcessPage({ params }) {
           work_id: '008b8b96-ce81-494d-9c34-dec770ac9abc', // Real work ID from seed data
           buyer_id: 'bc68b7b4-9435-4cf0-a72a-a7a3b339a56b', // Real buyer ID from seed data
           license_type: 'standard', // Mock license type
-          price_usdt: 25.50, // Mock price
+          price_bidr: 25.50, // Mock price in BIDR (changed from price_usdt)
         }),
       });
 

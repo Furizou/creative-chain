@@ -17,7 +17,7 @@ export async function POST(request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { license_offering_id } = body;
+    const { license_offering_id, user_id } = body;
 
     // Validate required fields
     if (!license_offering_id) {
@@ -47,12 +47,19 @@ export async function POST(request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Forward cookies from original request
+        ...(request.headers.get('cookie') && {
+          'cookie': request.headers.get('cookie')
+        }),
         // Forward any authorization headers
         ...(request.headers.get('authorization') && {
           'authorization': request.headers.get('authorization')
         })
       },
-      body: JSON.stringify({ license_offering_id })
+      body: JSON.stringify({
+        license_offering_id,
+        user_id // Forward user_id if provided
+      })
     });
 
     const orderResult = await orderResponse.json();

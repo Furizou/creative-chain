@@ -1,8 +1,10 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Format price for display in Indonesian Rupiah
@@ -26,6 +28,7 @@ const formatPrice = (price) => {
 function CheckoutPageContent({ params }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
 
   // State management
   const [workId, setWorkId] = useState(null);
@@ -119,9 +122,18 @@ function CheckoutPageContent({ params }) {
   const handleConfirmPayment = async () => {
     if (!licenseOfferingId || isProcessing) return;
 
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      setError('You must be logged in to purchase a license');
+      router.push(`/login?redirect=/creator/works/${workId}/checkout?license_id=${licenseOfferingId}`);
+      return;
+    }
+
     try {
       setIsProcessing(true);
       setError(null);
+
+      console.log('🔍 Initiating payment with user:', user.id);
 
       // Call payment initiation endpoint
       const response = await fetch('/api/payments/initiate', {
@@ -129,8 +141,10 @@ function CheckoutPageContent({ params }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: Include cookies for authentication
         body: JSON.stringify({
           license_offering_id: licenseOfferingId,
+          user_id: user.id, // Explicitly pass user ID as fallback
         }),
       });
 
