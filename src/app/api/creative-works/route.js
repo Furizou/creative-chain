@@ -1,29 +1,15 @@
-import { createClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
+    const supabase = await createClient()
     
-    // Search parameters
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category');
-    const creator = searchParams.get('creator');
-    const minPrice = searchParams.get('min_price');
-    const maxPrice = searchParams.get('max_price');
-    const licenseType = searchParams.get('license_type');
-    const hasActiveLicense = searchParams.get('has_active_license');
-    
-    // Pagination parameters
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
-
-    // Sort parameters
-    const sortBy = searchParams.get('sort_by') || 'created_at';
-    const sortOrder = searchParams.get('sort_order') || 'desc';
-
-    const supabase = await createClient();
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')
+    const category = searchParams.get('category')
+    const sort = searchParams.get('sort') || 'latest'
+    const page = parseInt(searchParams.get('page')) || 1
+    const limit = 12
 
     // Build the base query
     let query = supabase

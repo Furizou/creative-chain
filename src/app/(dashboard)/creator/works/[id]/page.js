@@ -23,6 +23,8 @@ export default function WorkDetailsPage() {
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState(null);
+  const [certificate, setCertificate] = useState(null);
+  const [certificateLoading, setCertificateLoading] = useState(true);
 
   // Fetch work and license offerings data
   useEffect(() => {
@@ -110,6 +112,35 @@ export default function WorkDetailsPage() {
     };
 
     fetchHistory();
+  }, [workId]);
+
+  // Fetch copyright certificate data
+  useEffect(() => {
+    if (!workId) return;
+
+    const fetchCertificate = async () => {
+      try {
+        setCertificateLoading(true);
+
+        const { data, error } = await supabase
+          .from('copyright_certificates')
+          .select('*')
+          .eq('creative_work_id', workId)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching certificate:', error);
+        }
+
+        setCertificate(data);
+      } catch (err) {
+        console.error('Error fetching certificate:', err);
+      } finally {
+        setCertificateLoading(false);
+      }
+    };
+
+    fetchCertificate();
   }, [workId]);
 
   // Handle demo license creation
@@ -282,27 +313,6 @@ export default function WorkDetailsPage() {
                     <p className="text-gray-700 mb-6 font-medium">
                       {work.original_filename || 'Unknown filename'}
                     </p>
-                    <a
-                      href={work.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                    >
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Download File
-                    </a>
                   </div>
                 )
               ) : (
@@ -398,29 +408,89 @@ export default function WorkDetailsPage() {
               {/* Certificate Status */}
               <div className="p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Certificate Status</h2>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <svg
-                      className="h-5 w-5 text-yellow-400 mr-3 flex-shrink-0"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
+                {certificateLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <svg className="animate-spin h-5 w-5 text-blue-600 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <div>
-                      <span className="text-yellow-800 font-medium block">
-                        Certificate Status: Not Yet Minted
-                      </span>
-                      <p className="text-yellow-700 text-sm mt-1">
-                        This work has not yet been minted as a blockchain certificate.
-                      </p>
+                    <span className="text-sm text-gray-600">Loading certificate status...</span>
+                  </div>
+                ) : certificate ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-start mb-4">
+                      <svg
+                        className="h-5 w-5 text-green-400 mr-3 flex-shrink-0 mt-0.5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <div className="flex-1">
+                        <span className="text-green-800 font-medium block">
+                          Certificate Status: Minted
+                        </span>
+                        <p className="text-green-700 text-sm mt-1">
+                          This work has been successfully minted as a blockchain certificate.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3 border-t border-green-200 pt-4">
+                      <div>
+                        <dt className="text-sm font-medium text-green-800">Token ID</dt>
+                        <dd className="mt-1 text-sm text-green-900 font-mono break-all">
+                          {certificate.token_id || 'N/A'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-green-800">Transaction Hash</dt>
+                        <dd className="mt-1 text-sm text-green-900 font-mono break-all">
+                          {certificate.transaction_hash || 'N/A'}
+                        </dd>
+                      </div>
+                      <div className="pt-2">
+                        <button
+                          onClick={() => router.push(`/verify?txHash=${certificate.transaction_hash}`)}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                        >
+                          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Verify Certificate
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <svg
+                        className="h-5 w-5 text-yellow-400 mr-3 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <div>
+                        <span className="text-yellow-800 font-medium block">
+                          Certificate Status: Not Yet Minted
+                        </span>
+                        <p className="text-yellow-700 text-sm mt-1">
+                          This work has not yet been minted as a blockchain certificate.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Divider */}
@@ -435,34 +505,36 @@ export default function WorkDetailsPage() {
                     </h2>
                     <div className="flex items-center gap-2">
                       {isCreator && (
-                        <button
-                          onClick={() => router.push(`/creator/works/${workId}/configure`)}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                        >
-                          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Configure License
-                        </button>
-                      )}
-                      {process.env.NODE_ENV === 'development' && (
-                        <button
-                          onClick={handleCreateDemoLicense}
-                          disabled={isCreatingDemo}
-                          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {isCreatingDemo ? (
-                            <>
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Creating...
-                            </>
-                          ) : (
-                            'DEV: Create Demo License'
+                        <>
+                          <button
+                            onClick={() => router.push(`/creator/works/${workId}/configure`)}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                          >
+                            <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Configure Licenses
+                          </button>
+                          {process.env.NODE_ENV === 'development' && (
+                            <button
+                              onClick={handleCreateDemoLicense}
+                              disabled={isCreatingDemo}
+                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {isCreatingDemo ? (
+                                <>
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Creating...
+                                </>
+                              ) : (
+                                'DEV: Create Demo License'
+                              )}
+                            </button>
                           )}
-                        </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -534,7 +606,7 @@ export default function WorkDetailsPage() {
                       <p className="text-sm text-gray-500 mb-4">
                         There are currently no license offerings for this work.
                       </p>
-                      {process.env.NODE_ENV === 'development' && (
+                      {isCreator && process.env.NODE_ENV === 'development' && (
                         <button
                           onClick={handleCreateDemoLicense}
                           disabled={isCreatingDemo}
