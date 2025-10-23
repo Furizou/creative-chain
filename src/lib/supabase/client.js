@@ -1,5 +1,6 @@
 // Supabase client configuration for browser environment
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 // Singleton instance to avoid multiple client creations
 let browserClient = null
@@ -100,9 +101,6 @@ export function createClient() {
   }
 
   console.log('✅ Supabase client: Creating real Supabase client with @supabase/ssr')
-
-  // Import createBrowserClient from @supabase/ssr for better Next.js integration
-  const { createBrowserClient } = require('@supabase/ssr')
 
   // Create and cache the browser client using @supabase/ssr
   // This uses cookies by default which works better with Next.js middleware
