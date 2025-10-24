@@ -107,8 +107,8 @@ function LoginForm() {
     
     // Demo user credentials
     const demoCredentials = {
-      email: 'demo@creativechain.com',
-      password: 'Demo123456'
+      email: 'demo@sinar.com',
+      password: 'DemoSinar123'
     };
 
     try {
