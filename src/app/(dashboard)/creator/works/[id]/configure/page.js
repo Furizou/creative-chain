@@ -22,7 +22,6 @@ export default function ConfigureLicensePage() {
   const [message, setMessage] = useState("");
   const [prefetching, setPrefetching] = useState(true);
   const [error, setError] = useState("");
-  const [isEditMode, setIsEditMode] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [userSearchOpen, setUserSearchOpen] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -337,12 +336,13 @@ By purchasing this license, you agree to these terms and conditions.`
 
         // Only set default royalty split if this is a new license (not edit mode)
         // and if royalty splits haven't been loaded yet
+        // AND if the user has a wallet address
         setForm((f) => {
-          if (f.royalty_splits.length === 1 && !f.royalty_splits[0].recipient_address) {
+          if (f.royalty_splits.length === 1 && !f.royalty_splits[0].recipient_address && profile.wallet_address) {
             return {
               ...f,
               royalty_splits: [{
-                recipient_address: profile.wallet_address || '',
+                recipient_address: profile.wallet_address,
                 recipient_name: profile.username || profile.full_name || 'You',
                 split_percentage: '100'
               }]
@@ -380,43 +380,43 @@ By purchasing this license, you agree to these terms and conditions.`
       setPrefetching(false);
     };
 
-    const loadExistingLicense = async () => {
+    const loadExistingRoyaltySplits = async () => {
       if (!workId) return;
-      const res = await fetch(`/api/license-offerings/list?work_id=${workId}`);
-      const payload = await res.json();
-      if (res.ok && payload.data && payload.data.length > 0) {
-        const lic = payload.data[0];
+
+      // Load existing royalty splits for this work (if any)
+      // Royalty splits are work-level, shared across all license offerings
+      const { data: splits } = await supabase
+        .from('royalty_splits')
+        .select('*')
+        .eq('work_id', workId);
+
+      if (splits && splits.length) {
+        // Fetch profile info for each recipient by wallet address
+        const splitsWithNames = await Promise.all(
+          splits.map(async (s) => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username, full_name, wallet_address')
+              .eq('wallet_address', s.recipient_address)
+              .single();
+
+            return {
+              recipient_address: s.recipient_address,
+              recipient_name: profile?.username || profile?.full_name || 'Unknown User',
+              split_percentage: String(s.split_percentage)
+            };
+          })
+        );
+
         setForm((f) => ({
           ...f,
-          license_type: lic.license_type || '',
-          title: lic.title || '',
-          description: lic.description || '',
-          price_idr: lic.price_idr || '',
-          usage_limit: lic.usage_limit || '',
-          duration_days: lic.duration_days || '',
-          terms: lic.terms || '',
+          royalty_splits: splitsWithNames
         }));
-        // load splits with profile info
-        const { data: splits } = await supabase
-          .from('royalty_splits')
-          .select('*, profiles:recipient_address(username, full_name, wallet_address)')
-          .eq('work_id', workId);
-        if (splits && splits.length) {
-          setForm((f) => ({
-            ...f,
-            royalty_splits: splits.map(s => ({
-              recipient_address: s.recipient_address,
-              recipient_name: s.profiles?.username || s.profiles?.full_name || 'Unknown User',
-              split_percentage: String(s.split_percentage)
-            }))
-          }));
-        }
-        setIsEditMode(true);
       }
     };
 
     loadCurrentUser();
-    loadExistingLicense();
+    loadExistingRoyaltySplits();
     loadWork();
   }, [workId]);
 
@@ -443,8 +443,13 @@ By purchasing this license, you agree to these terms and conditions.`
   };
 
   const searchUsers = async (query) => {
+    // If no query, show current user as default option (if they have a wallet)
     if (!query || query.length < 2) {
-      setSearchResults([]);
+      if (currentUser && currentUser.wallet_address) {
+        setSearchResults([currentUser]);
+      } else {
+        setSearchResults([]);
+      }
       return;
     }
 
@@ -452,6 +457,7 @@ By purchasing this license, you agree to these terms and conditions.`
       .from('profiles')
       .select('id, username, full_name, wallet_address')
       .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+      .not('wallet_address', 'is', null)
       .limit(10);
 
     if (!error && data) {
@@ -530,7 +536,7 @@ By purchasing this license, you agree to these terms and conditions.`
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save configuration");
 
-      setMessage("✅ Configuration saved successfully!");
+      setMessage("✅ License offering created successfully!");
       setTimeout(() => router.push("/creator/my-works"), 1500);
     } catch (err) {
       console.error(err);
@@ -546,6 +552,16 @@ By purchasing this license, you agree to these terms and conditions.`
 
       {prefetching && <p className="p-4">Loading work data...</p>}
       {error && <p className="text-red-600">{error}</p>}
+
+      {/* Warning if user has no wallet address */}
+      {currentUser && !currentUser.wallet_address && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>⚠️ Wallet Setup Required:</strong> You need to set up a wallet address in your profile before you can create license offerings.
+            Please visit your profile settings to add a wallet address.
+          </p>
+        </div>
+      )}
 
       <div className="mb-6">
         <button
@@ -799,7 +815,8 @@ By purchasing this license, you agree to these terms and conditions.`
                     onClick={() => {
                       setUserSearchOpen(idx);
                       setSearchQuery("");
-                      setSearchResults([]);
+                      // Show current user by default (if they have a wallet)
+                      setSearchResults(currentUser && currentUser.wallet_address ? [currentUser] : []);
                     }}
                     className="w-full text-left border border-gray-300 p-2 rounded bg-white hover:bg-gray-50 focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
@@ -817,8 +834,15 @@ By purchasing this license, you agree to these terms and conditions.`
                           placeholder="Search by username or name..."
                           value={searchQuery}
                           onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            searchUsers(e.target.value);
+                            const value = e.target.value;
+                            setSearchQuery(value);
+                            searchUsers(value);
+                          }}
+                          onFocus={() => {
+                            // Show current user by default when focusing on empty search
+                            if (!searchQuery && currentUser && currentUser.wallet_address) {
+                              setSearchResults([currentUser]);
+                            }
                           }}
                           className="border border-gray-300 p-2 w-full rounded mb-3 focus:ring-2 focus:ring-primary focus:border-transparent"
                           autoFocus
@@ -844,10 +868,14 @@ By purchasing this license, you agree to these terms and conditions.`
                               </div>
                             ))
                           ) : searchQuery.length >= 2 ? (
-                            <p className="text-sm text-gray-500 text-center py-4">No users found</p>
+                            <p className="text-sm text-gray-500 text-center py-4">
+                              No users found with wallet addresses
+                            </p>
                           ) : (
                             <p className="text-sm text-gray-500 text-center py-4">
-                              Type at least 2 characters to search
+                              {currentUser && currentUser.wallet_address
+                                ? 'Type to search for other users'
+                                : 'Type at least 2 characters to search for users with wallets'}
                             </p>
                           )}
                         </div>
