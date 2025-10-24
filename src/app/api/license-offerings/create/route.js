@@ -33,81 +33,51 @@ export async function POST(req) {
 
     const now = new Date().toISOString();
 
-    // check if a license already exists for this work
-    const { data: existing, error: existingErr } = await supabase
-      .from('license_offerings')
-      .select('*')
-      .eq('work_id', work_id)
-      .single();
-
-    if (existingErr && existingErr.code !== 'PGRST116') {
-      // PGRST116 used by supabase when no rows found for single()
-      // If other error, throw
-      console.warn('existing check warning', existingErr.message || existingErr);
-    }
-
-    let data;
-
-    if (existing && existing.id) {
-      // update existing
-      const { data: updated, error: updateErr } = await supabase
-        .from('license_offerings')
-        .update({
-          license_type,
-          title,
-          description: description ?? null,
-          price_idr: Number(price_idr),
-          price_bidr: calculatedPriceBidr,
-          usage_limit: usage_limit ?? null,
-          duration_days: duration_days ?? null,
-          terms: terms ?? null,
-          updated_at: now,
-        })
-        .eq('id', existing.id)
-        .select()
-        .single();
-
-      if (updateErr) throw updateErr;
-      data = updated;
-    } else {
-      const { data: inserted, error: insertErr } = await supabase.from('license_offerings').insert([
-        {
-          id: uuidv4(),
-          work_id,
-          license_type,
-          title,
-          description: description ?? null,
-          price_idr: Number(price_idr),
-          price_bidr: calculatedPriceBidr,
-          usage_limit: usage_limit ?? null,
-          duration_days: duration_days ?? null,
-          terms: terms ?? null,
-          is_active: true,
-          created_at: now,
-          updated_at: now,
-        },
-      ]).select().single();
-
-      if (insertErr) throw insertErr;
-      data = inserted;
-    }
-
-    // optionally handle royalty splits from payload (replace existing)
-  if (royalty_splits && royalty_splits.length > 0) {
-      // delete existing splits for work
-      const { error: delErr } = await supabase.from('royalty_splits').delete().eq('work_id', work_id);
-      if (delErr) throw delErr;
-
-  const splits = royalty_splits.map((s) => ({
+    // Always create a new license offering (multiple offerings per work are allowed)
+    const { data: inserted, error: insertErr } = await supabase.from('license_offerings').insert([
+      {
         id: uuidv4(),
         work_id,
-        recipient_address: s.recipient_address,
-        split_percentage: s.split_percentage,
-        split_contract_address: s.split_contract_address ?? null,
+        license_type,
+        title,
+        description: description ?? null,
+        price_idr: Number(price_idr),
+        price_bidr: calculatedPriceBidr,
+        usage_limit: usage_limit ?? null,
+        duration_days: duration_days ?? null,
+        terms: terms ?? null,
+        is_active: true,
         created_at: now,
-      }));
-      const { error: splitErr } = await supabase.from('royalty_splits').insert(splits);
-      if (splitErr) throw splitErr;
+        updated_at: now,
+      },
+    ]).select().single();
+
+    if (insertErr) throw insertErr;
+    const data = inserted;
+
+    // Handle royalty splits (work-level, shared across all license offerings)
+    // Only set if provided and no splits exist yet for this work
+    if (royalty_splits && royalty_splits.length > 0) {
+      // Check if splits already exist for this work
+      const { data: existingSplits } = await supabase
+        .from('royalty_splits')
+        .select('id')
+        .eq('work_id', work_id)
+        .limit(1);
+
+      // Only insert if no splits exist yet
+      if (!existingSplits || existingSplits.length === 0) {
+        const splits = royalty_splits.map((s) => ({
+          id: uuidv4(),
+          work_id,
+          recipient_address: s.recipient_address,
+          split_percentage: s.split_percentage,
+          split_contract_address: s.split_contract_address ?? null,
+          created_at: now,
+        }));
+        const { error: splitErr } = await supabase.from('royalty_splits').insert(splits);
+        if (splitErr) throw splitErr;
+      }
     }
 
     return NextResponse.json({ success: true, license: data }, { status: 201 });
