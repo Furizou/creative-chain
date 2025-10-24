@@ -93,11 +93,14 @@ export default function CategoryBreakdownChart({ data, loading, title = "Sales b
               <Legend 
                 verticalAlign="bottom" 
                 height={36}
-                formatter={(value, entry) => (
-                  <span style={{ color: entry.color }}>
-                    {value}: {entry.payload.sales} sales
-                  </span>
-                )}
+                formatter={(value, entry) => {
+                  const name = entry.payload.category || entry.payload.type || 'Unknown';
+                  return (
+                    <span style={{ color: entry.color }}>
+                      {name}: {entry.payload.sales} sales
+                    </span>
+                  );
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
