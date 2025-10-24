@@ -1,17 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 /**
- * Blockchain Verification Page
- * Allows users to verify copyright certificates and licenses by:
- * - Transaction Hash
- * - Token ID
- * - Work Hash
- * - Certificate ID
+ * Blockchain Verification Page Content Component
+ * This component uses useSearchParams and must be wrapped in Suspense
  */
-export default function VerifyPage() {
+function VerifyPageContent() {
   const searchParams = useSearchParams();
   const [searchType, setSearchType] = useState('tx');
   const [searchValue, setSearchValue] = useState('');
@@ -420,5 +416,24 @@ export default function VerifyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Main Verify Page Component
+ * Wraps VerifyPageContent with Suspense boundary
+ */
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-base py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+          <p className="text-structural">Loading verification page...</p>
+        </div>
+      </div>
+    }>
+      <VerifyPageContent />
+    </Suspense>
   );
 }
