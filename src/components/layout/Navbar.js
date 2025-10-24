@@ -178,39 +178,12 @@ export default function Navbar() {
  };
 
 
- // Don't render navigation until mounted to prevent hydration errors
- if (!mounted) {
-   return (
-     <div className="h-16 md:h-32">
-       <nav className="fixed top-0 left-0 right-0 bg-structural text-white shadow-lg h-16 z-40 md:relative">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <div className="flex justify-between items-center h-16">
-             <Link href="/" className="flex items-center">
-               <Image
-                 src="/logo/logo_white.svg"
-                 alt="SINAR Logo"
-                 width={120}
-                 height={32}
-                 className="h-8 w-auto"
-               />
-             </Link>
-             <div className="hidden md:flex items-center space-x-8">
-               {/* Empty space during SSR to prevent hydration errors */}
-               <div className="w-24 h-8"></div>
-             </div>
-           </div>
-         </div>
-       </nav>
-     </div>
-   );
- }
-
  return (
    <>
      {/* Fixed height wrapper to prevent page content jumping */}
-     <div className="h-16 md:h-32">
+     <div className="h-16 md:h-32" suppressHydrationWarning>
        {/* Navbar 1: Default (fixed on mobile, scrolls away on desktop) */}
-       <nav className="fixed top-0 left-0 right-0 bg-structural text-white shadow-lg h-16 z-40 md:relative">
+       <nav className="fixed top-0 left-0 right-0 bg-structural text-white shadow-lg h-16 z-40 md:relative" suppressHydrationWarning>
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="flex justify-between items-center h-16">
              {/* Logo - White for default navbar */}
@@ -225,7 +198,7 @@ export default function Navbar() {
              </Link>
 
              {/* Navigation Links */}
-             <div className="hidden md:flex items-center space-x-8">
+             <div className="hidden md:flex items-center space-x-8" suppressHydrationWarning>
                {!isAuthenticated ? (
                  // Guest navigation
                  <>
@@ -262,7 +235,7 @@ export default function Navbar() {
              </div>
 
              {/* Auth Buttons */}
-             <div className="hidden md:flex items-center">
+             <div className="hidden md:flex items-center" suppressHydrationWarning>
                <AuthButtons />
              </div>
 
@@ -283,7 +256,7 @@ export default function Navbar() {
 
      {/* Navbar 2: Floating (slides down from top when scrolled) */}
      {mounted && (
-     <nav className={`
+     <nav suppressHydrationWarning className={`
        fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-7xl rounded-xl bg-structural shadow-lg z-50 h-16 transition-all duration-300 ease-in-out md:block
        ${isScrolled
          ? 'opacity-100 translate-y-0'
@@ -305,7 +278,7 @@ export default function Navbar() {
            </Link>
 
            {/* Navigation Links */}
-           <div className="hidden md:flex items-center space-x-8">
+           <div className="hidden md:flex items-center space-x-8" suppressHydrationWarning>
              {!isAuthenticated ? (
                // Guest navigation
                <>
@@ -342,7 +315,7 @@ export default function Navbar() {
            </div>
 
            {/* Auth Buttons */}
-           <div className="hidden md:flex items-center">
+           <div className="hidden md:flex items-center" suppressHydrationWarning>
              <AuthButtons />
            </div>
 
