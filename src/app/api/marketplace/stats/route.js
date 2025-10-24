@@ -25,16 +25,20 @@ export async function GET() {
     if (worksError) throw worksError
 
     // Get unique creators count
-    const { count: activeCreators, error: creatorsError } = await supabase
+    const { data: creatorData, error: creatorsError } = await supabase
       .from('creative_works')
-      .select('creator_id', { count: 'exact', head: true })
+      .select('creator_id')
       .not('creator_id', 'is', null)
 
     if (creatorsError) throw creatorsError
 
-    // Get total transactions
+    // Count unique creators
+    const uniqueCreators = new Set(creatorData?.map(row => row.creator_id) || [])
+    const activeCreators = uniqueCreators.size
+
+    // Get total transactions (licenses purchased)
     const { count: totalTransactions, error: transactionsError } = await supabase
-      .from('license_transactions')
+      .from('licenses')
       .select('*', { count: 'exact', head: true })
 
     if (transactionsError) throw transactionsError
