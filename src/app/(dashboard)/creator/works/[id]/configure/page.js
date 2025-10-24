@@ -399,16 +399,30 @@ By purchasing this license, you agree to these terms and conditions.`
         // load splits with profile info
         const { data: splits } = await supabase
           .from('royalty_splits')
-          .select('*, profiles:recipient_address(username, full_name, wallet_address)')
+          .select('*')
           .eq('work_id', workId);
+
         if (splits && splits.length) {
+          // Fetch profile info for each recipient by wallet address
+          const splitsWithNames = await Promise.all(
+            splits.map(async (s) => {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, full_name, wallet_address')
+                .eq('wallet_address', s.recipient_address)
+                .single();
+
+              return {
+                recipient_address: s.recipient_address,
+                recipient_name: profile?.username || profile?.full_name || 'Unknown User',
+                split_percentage: String(s.split_percentage)
+              };
+            })
+          );
+
           setForm((f) => ({
             ...f,
-            royalty_splits: splits.map(s => ({
-              recipient_address: s.recipient_address,
-              recipient_name: s.profiles?.username || s.profiles?.full_name || 'Unknown User',
-              split_percentage: String(s.split_percentage)
-            }))
+            royalty_splits: splitsWithNames
           }));
         }
         setIsEditMode(true);
@@ -443,8 +457,13 @@ By purchasing this license, you agree to these terms and conditions.`
   };
 
   const searchUsers = async (query) => {
+    // If no query, show current user as default option
     if (!query || query.length < 2) {
-      setSearchResults([]);
+      if (currentUser) {
+        setSearchResults([currentUser]);
+      } else {
+        setSearchResults([]);
+      }
       return;
     }
 
@@ -799,7 +818,8 @@ By purchasing this license, you agree to these terms and conditions.`
                     onClick={() => {
                       setUserSearchOpen(idx);
                       setSearchQuery("");
-                      setSearchResults([]);
+                      // Show current user by default
+                      setSearchResults(currentUser ? [currentUser] : []);
                     }}
                     className="w-full text-left border border-gray-300 p-2 rounded bg-white hover:bg-gray-50 focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
@@ -817,8 +837,15 @@ By purchasing this license, you agree to these terms and conditions.`
                           placeholder="Search by username or name..."
                           value={searchQuery}
                           onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            searchUsers(e.target.value);
+                            const value = e.target.value;
+                            setSearchQuery(value);
+                            searchUsers(value);
+                          }}
+                          onFocus={() => {
+                            // Show current user by default when focusing on empty search
+                            if (!searchQuery && currentUser) {
+                              setSearchResults([currentUser]);
+                            }
                           }}
                           className="border border-gray-300 p-2 w-full rounded mb-3 focus:ring-2 focus:ring-primary focus:border-transparent"
                           autoFocus
@@ -847,7 +874,7 @@ By purchasing this license, you agree to these terms and conditions.`
                             <p className="text-sm text-gray-500 text-center py-4">No users found</p>
                           ) : (
                             <p className="text-sm text-gray-500 text-center py-4">
-                              Type at least 2 characters to search
+                              {currentUser ? 'Type to search for other users' : 'Type at least 2 characters to search'}
                             </p>
                           )}
                         </div>
