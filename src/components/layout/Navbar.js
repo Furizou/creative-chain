@@ -52,15 +52,23 @@ export default function Navbar() {
            className="flex items-center space-x-3 hover:text-primary transition-colors group text-white"
          >
            <div className="relative">
-             <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
-               {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-             </div>
-             {/* Online indicator */}
-             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-structural rounded-full"></div>
+             {profile?.avatar_url ? (
+               <Image
+                 src={profile.avatar_url}
+                 alt={`${profile?.full_name || profile?.username || 'User'} avatar`}
+                 width={36}
+                 height={36}
+                 className="w-9 h-9 rounded-full object-cover shadow-lg"
+               />
+             ) : (
+               <div className="w-9 h-9 bg-gray-200 text-structural rounded-full flex items-center justify-center font-bold text-sm shadow-lg border border-gray-200">
+                 {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+               </div>
+             )}
            </div>
            <div className="hidden sm:flex flex-col items-start">
              <span className="font-semibold text-sm leading-tight text-white">
-               {profile?.username || profile?.full_name || 'User'}
+               {profile?.full_name || profile?.username || 'User'}
              </span>
              <span className="text-xs text-gray-300 leading-tight">
                Creator
@@ -76,9 +84,19 @@ export default function Navbar() {
              {/* User Info Header */}
              <div className="px-4 py-3 border-b border-gray-100">
                <div className="flex items-center space-x-3">
-                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
-                   {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                 </div>
+                 {profile?.avatar_url ? (
+                   <Image
+                     src={profile.avatar_url}
+                     alt={`${profile?.full_name || profile?.username || 'User'} avatar`}
+                     width={40}
+                     height={40}
+                     className="w-10 h-10 rounded-full object-cover shadow-lg"
+                   />
+                 ) : (
+                   <div className="w-10 h-10 bg-gray-200 text-structural rounded-full flex items-center justify-center font-bold border border-gray-200">
+                     {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                   </div>
+                 )}
                  <div className="flex-1">
                    <p className="text-sm font-semibold text-gray-900">{profile?.full_name || profile?.username || 'User'}</p>
                    <p className="text-xs text-gray-500">{user?.email}</p>
@@ -207,7 +225,7 @@ export default function Navbar() {
 
              {/* Mobile Menu Button */}
              <button
-               className="md:hidden text-white"
+               className={`md:hidden ${isScrolled ? 'text-structural' : 'text-white'}`}
                onClick={() => setShowMobileMenu(!showMobileMenu)}
              >
                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +269,7 @@ export default function Navbar() {
                      {/* User info */}
                      <div className="px-3 py-3 border-b border-gray-700 mb-2">
                        <div className="flex items-center space-x-3">
-                         <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
+                         <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-white rounded-full flex items-center justify-center font-bold">
                            {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                          </div>
                          <div>
@@ -356,29 +374,29 @@ export default function Navbar() {
              {!isAuthenticated ? (
                // Guest navigation
                <>
-                 <Link href="/" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/" className="text-structural hover:text-primary transition-colors font-body">
                    Home
                  </Link>
-                 <Link href="/marketplace" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/marketplace" className="text-structural hover:text-primary transition-colors font-body">
                    Marketplace
                  </Link>
-                 <Link href="/verify" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/verify" className="text-structural hover:text-primary transition-colors font-body">
                    Verify
                  </Link>
                </>
              ) : (
                // Logged in user navigation
                <>
-                 <Link href="/marketplace" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/marketplace" className="text-structural hover:text-primary transition-colors font-body">
                    Marketplace
                  </Link>
-                 <Link href="/creator/works" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/creator/works" className="text-structural hover:text-primary transition-colors font-body">
                    My Works
                  </Link>
-                 <Link href="/licenses" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/licenses" className="text-structural hover:text-primary transition-colors font-body">
                    My Licenses
                  </Link>
-                 <Link href="/verify" className="text-white hover:text-primary transition-colors font-body">
+                 <Link href="/verify" className="text-structural hover:text-primary transition-colors font-body">
                    Verify
                  </Link>
                </>
@@ -387,12 +405,12 @@ export default function Navbar() {
 
            {/* Auth Buttons */}
            <div className="hidden md:flex items-center">
-             <AuthButtons isFloating={true} />
+             <AuthButtons isFloating={false} />
            </div>
 
            {/* Mobile Menu Button */}
            <button
-             className="md:hidden text-white"
+             className={`md:hidden ${isScrolled ? 'text-structural' : 'text-white'}`}
              onClick={() => setShowMobileMenu(!showMobileMenu)}
            >
              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,7 +454,7 @@ export default function Navbar() {
                    {/* User info */}
                    <div className="px-3 py-3 border-b border-gray-700 mb-2">
                      <div className="flex items-center space-x-3">
-                       <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-structural rounded-full flex items-center justify-center font-bold">
+                       <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary text-white rounded-full flex items-center justify-center font-bold">
                          {profile?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                        </div>
                        <div>
