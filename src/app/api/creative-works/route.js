@@ -244,8 +244,8 @@ export async function GET(request) {
       });
     }
 
-    // Calculate pagination metadata
-    const totalRecords = filteredWorks.length; // This is approximate after filtering
+    // Calculate pagination metadata using the actual database count
+    const totalRecords = count || 0;
     const totalPages = Math.ceil(totalRecords / limit);
     const hasNext = page < totalPages;
     const hasPrev = page > 1;
