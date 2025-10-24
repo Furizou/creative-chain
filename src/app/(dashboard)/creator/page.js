@@ -315,57 +315,6 @@ export default function CreatorDashboard() {
       {/* Works Performance Table */}
       <WorksPerformanceTable data={worksPerformance} loading={chartsLoading} />
 
-      {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
-        <h2 className="text-xl font-bold text-structural mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link 
-            href="/creator/analytics"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-primary transition-colors group"
-          >
-            <div className="flex items-center space-x-3 mb-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-structural group-hover:text-primary">
-                Detailed Analytics
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600">
-              Deep dive into performance metrics and trends
-            </p>
-          </Link>
-          
-          <Link 
-            href="/creator/works"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-secondary transition-colors group"
-          >
-            <div className="flex items-center space-x-3 mb-2">
-              <FileText className="w-5 h-5 text-secondary" />
-              <h3 className="font-bold text-structural group-hover:text-secondary">
-                Manage Works
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600">
-              Edit, update, and manage your creative works
-            </p>
-          </Link>
-          
-          <Link 
-            href="/creator/earnings"
-            className="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 transition-colors group"
-          >
-            <div className="flex items-center space-x-3 mb-2">
-              <Wallet className="w-5 h-5 text-green-600" />
-              <h3 className="font-bold text-structural group-hover:text-green-600">
-                Withdraw Earnings
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600">
-              Transfer your earnings to bank account
-            </p>
-          </Link>
-        </div>
-      </div>
-
       {/* Recent Works Summary */}
       {recentWorks.length > 0 && (
         <div className="bg-white p-6 rounded-xl border border-gray-200">
