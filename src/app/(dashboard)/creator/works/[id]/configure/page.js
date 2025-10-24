@@ -22,7 +22,6 @@ export default function ConfigureLicensePage() {
   const [message, setMessage] = useState("");
   const [prefetching, setPrefetching] = useState(true);
   const [error, setError] = useState("");
-  const [isEditMode, setIsEditMode] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [userSearchOpen, setUserSearchOpen] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -380,57 +379,43 @@ By purchasing this license, you agree to these terms and conditions.`
       setPrefetching(false);
     };
 
-    const loadExistingLicense = async () => {
+    const loadExistingRoyaltySplits = async () => {
       if (!workId) return;
-      const res = await fetch(`/api/license-offerings/list?work_id=${workId}`);
-      const payload = await res.json();
-      if (res.ok && payload.data && payload.data.length > 0) {
-        const lic = payload.data[0];
+
+      // Load existing royalty splits for this work (if any)
+      // Royalty splits are work-level, shared across all license offerings
+      const { data: splits } = await supabase
+        .from('royalty_splits')
+        .select('*')
+        .eq('work_id', workId);
+
+      if (splits && splits.length) {
+        // Fetch profile info for each recipient by wallet address
+        const splitsWithNames = await Promise.all(
+          splits.map(async (s) => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username, full_name, wallet_address')
+              .eq('wallet_address', s.recipient_address)
+              .single();
+
+            return {
+              recipient_address: s.recipient_address,
+              recipient_name: profile?.username || profile?.full_name || 'Unknown User',
+              split_percentage: String(s.split_percentage)
+            };
+          })
+        );
+
         setForm((f) => ({
           ...f,
-          license_type: lic.license_type || '',
-          title: lic.title || '',
-          description: lic.description || '',
-          price_idr: lic.price_idr || '',
-          usage_limit: lic.usage_limit || '',
-          duration_days: lic.duration_days || '',
-          terms: lic.terms || '',
+          royalty_splits: splitsWithNames
         }));
-        // load splits with profile info
-        const { data: splits } = await supabase
-          .from('royalty_splits')
-          .select('*')
-          .eq('work_id', workId);
-
-        if (splits && splits.length) {
-          // Fetch profile info for each recipient by wallet address
-          const splitsWithNames = await Promise.all(
-            splits.map(async (s) => {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('username, full_name, wallet_address')
-                .eq('wallet_address', s.recipient_address)
-                .single();
-
-              return {
-                recipient_address: s.recipient_address,
-                recipient_name: profile?.username || profile?.full_name || 'Unknown User',
-                split_percentage: String(s.split_percentage)
-              };
-            })
-          );
-
-          setForm((f) => ({
-            ...f,
-            royalty_splits: splitsWithNames
-          }));
-        }
-        setIsEditMode(true);
       }
     };
 
     loadCurrentUser();
-    loadExistingLicense();
+    loadExistingRoyaltySplits();
     loadWork();
   }, [workId]);
 
@@ -549,7 +534,7 @@ By purchasing this license, you agree to these terms and conditions.`
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save configuration");
 
-      setMessage("✅ Configuration saved successfully!");
+      setMessage("✅ License offering created successfully!");
       setTimeout(() => router.push("/creator/my-works"), 1500);
     } catch (err) {
       console.error(err);
