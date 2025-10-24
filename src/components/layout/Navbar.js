@@ -11,10 +11,18 @@ export default function Navbar() {
  const [showMobileMenu, setShowMobileMenu] = useState(false);
  const [showUserMenu, setShowUserMenu] = useState(false);
  const [isScrolled, setIsScrolled] = useState(false);
+ const [mounted, setMounted] = useState(false);
  const { user, profile, loading, signOut, isAuthenticated } = useAuth();
+
+ // Prevent hydration mismatch by only enabling scroll effects after mount
+ useEffect(() => {
+   setMounted(true);
+ }, []);
 
  // Scroll effect for navbar transformation
  useEffect(() => {
+   if (!mounted) return;
+
    const handleScroll = () => {
      if (window.scrollY > 100) {
        setIsScrolled(true);
@@ -25,7 +33,7 @@ export default function Navbar() {
 
    window.addEventListener('scroll', handleScroll);
    return () => window.removeEventListener('scroll', handleScroll);
- }, []);
+ }, [mounted]);
 
 
  const handleSignOut = async () => {
@@ -170,6 +178,33 @@ export default function Navbar() {
  };
 
 
+ // Don't render navigation until mounted to prevent hydration errors
+ if (!mounted) {
+   return (
+     <div className="h-16 md:h-32">
+       <nav className="fixed top-0 left-0 right-0 bg-structural text-white shadow-lg h-16 z-40 md:relative">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <div className="flex justify-between items-center h-16">
+             <Link href="/" className="flex items-center">
+               <Image
+                 src="/logo/logo_white.svg"
+                 alt="SINAR Logo"
+                 width={120}
+                 height={32}
+                 className="h-8 w-auto"
+               />
+             </Link>
+             <div className="hidden md:flex items-center space-x-8">
+               {/* Empty space during SSR to prevent hydration errors */}
+               <div className="w-24 h-8"></div>
+             </div>
+           </div>
+         </div>
+       </nav>
+     </div>
+   );
+ }
+
  return (
    <>
      {/* Fixed height wrapper to prevent page content jumping */}
@@ -247,6 +282,7 @@ export default function Navbar() {
      </div>
 
      {/* Navbar 2: Floating (slides down from top when scrolled) */}
+     {mounted && (
      <nav className={`
        fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-7xl rounded-xl bg-structural shadow-lg z-50 h-16 transition-all duration-300 ease-in-out md:block
        ${isScrolled
@@ -273,32 +309,32 @@ export default function Navbar() {
              {!isAuthenticated ? (
                // Guest navigation
                <>
-                 <Link href="/" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/" className="text-white hover:text-primary transition-colors font-body">
                    Home
                  </Link>
-                 <Link href="/marketplace" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/marketplace" className="text-white hover:text-primary transition-colors font-body">
                    Marketplace
                  </Link>
-                 <Link href="/verify" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/verify" className="text-white hover:text-primary transition-colors font-body">
                    Verify
                  </Link>
                </>
              ) : (
                // Logged in user navigation
                <>
-                 <Link href="/creator" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/creator" className="text-white hover:text-primary transition-colors font-body">
                    Dashboard
                  </Link>
-                 <Link href="/marketplace" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/marketplace" className="text-white hover:text-primary transition-colors font-body">
                    Marketplace
                  </Link>
-                 <Link href="/creator/works" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/creator/works" className="text-white hover:text-primary transition-colors font-body">
                    My Works
                  </Link>
-                 <Link href="/licenses" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/licenses" className="text-white hover:text-primary transition-colors font-body">
                    My Licenses
                  </Link>
-                 <Link href="/verify" className="text-structural hover:text-primary transition-colors font-body">
+                 <Link href="/verify" className="text-white hover:text-primary transition-colors font-body">
                    Verify
                  </Link>
                </>
@@ -323,6 +359,7 @@ export default function Navbar() {
 
        </div>
      </nav>
+     )}
 
      {/* Mobile Menu - Moved outside nav elements to fix floating burger button issue */}
      {showMobileMenu && (
